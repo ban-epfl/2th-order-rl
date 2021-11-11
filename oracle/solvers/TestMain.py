@@ -32,10 +32,10 @@ def test_01():
         def hessian_vector(self, x_t, v, z, r):
             return np.matmul(np.expand_dims(2 * z[:, 0],axis=1), np.expand_dims(v,axis=1))
 
-    gd_solver = SubProblemCubicNewton(max_iter=1000, c_prime=0.001)
+    gd_solver = SubProblemCubicNewton(max_iter=1000, c_prime=0.01)
     oracle = StochasticOracle(module=MyModule(), n1=10000, n2=10000)
     ms = SolverCubicNewtonMiniBatch(sub_solver=gd_solver, oracle=oracle,
-                                    max_iter=2000, ro=0.00001, l=1)
+                                    max_iter=2000, ro=0.001, l=4, epsilon=1e-5)
     print("best parameters", ms.run(np.random.RandomState(seed=42).rand(1)))
 
 
