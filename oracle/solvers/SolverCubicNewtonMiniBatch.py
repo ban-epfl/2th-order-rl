@@ -6,7 +6,7 @@
 # author: pedro.borges.melo@gmail.com
 # author: mohammadsakh@gmail.com
 
-from oracle.solvers.Solver import Solver
+from oracle.solvers.utils.Solver import Solver
 
 
 class SolverCubicNewtonMiniBatch(Solver):

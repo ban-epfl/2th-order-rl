@@ -9,7 +9,7 @@
 # Here we put the general tests.
 
 import numpy as np
-from oracle.solvers.Module import Module
+from oracle.solvers.utils.Module import Module
 from oracle.solvers.SolverCubicNewtonMiniBatch import SolverCubicNewtonMiniBatch
 from oracle.solvers.StochasticOracle import StochasticOracle
 from oracle.solvers.SubProblemCubicNewton import SubProblemCubicNewton
