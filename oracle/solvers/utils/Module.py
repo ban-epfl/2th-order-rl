@@ -36,8 +36,8 @@ class Module(ABC):
         """
 
     @abstractmethod
-    def get_param_num(self,
-                      ) -> int:
+    def get_sample_dim(self,
+                       ) -> int:
         pass
 
     def hessian_vector(self, x_t, v, z, r):

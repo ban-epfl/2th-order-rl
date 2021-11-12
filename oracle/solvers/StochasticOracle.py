@@ -20,9 +20,9 @@ class StochasticOracle(Oracle):
 
     def compute_oracle(self, x_t):
 
-        s1 = np.random.normal(1, 2, (self.n1, self.module.get_param_num()))
+        s1 = np.random.normal(1, 2, (self.n1, self.module.get_sample_dim()))
         g_t = self.module.gradient(x_t, s1).reshape((self.n1, 1)).mean(axis=0)
-        s2 = np.random.normal(1, 2, (self.n2, self.module.get_param_num()))
+        s2 = np.random.normal(1, 2, (self.n2, self.module.get_sample_dim()))
         B_t = lambda v: 1 / self.n2 * self.module.hessian_vector(x_t, v, s2, self.r).sum(axis=0)
 
         return g_t, B_t
