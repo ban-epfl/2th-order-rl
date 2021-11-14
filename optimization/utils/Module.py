@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 from abc import ABC, abstractmethod
 
@@ -54,3 +56,19 @@ class Module(ABC):
         """
         return (self.gradient(x_t + r * v, z) -
                 self.gradient(x_t - r * v, z)) / (2 * r)
+
+    def get_samples(self,
+                    n1: int,
+                    n2: int) -> Tuple[np.ndarray, np.ndarray]:
+        """
+            get batch samples
+            Args:
+                n1: batch size for gradient
+                n2: batch size for hessian
+
+            Returns:
+                Tuple[np.ndarray, np.ndarray]
+        """
+        s1 = np.random.normal(1, 2, (n1, self.get_sample_dim()))
+        s2 = np.random.normal(1, 2, (n2, self.get_sample_dim()))
+        return s1, s2

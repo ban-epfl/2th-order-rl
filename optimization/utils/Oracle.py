@@ -14,7 +14,7 @@
 from typing import Tuple, Any
 import numpy as np
 
-from oracle.solvers.utils.Module import Module
+from optimization.utils.Module import Module
 from abc import ABC, abstractmethod
 
 

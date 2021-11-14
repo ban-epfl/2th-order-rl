@@ -9,10 +9,10 @@
 # Here we put the general tests.
 
 import numpy as np
-from oracle.solvers.utils.Module import Module
-from oracle.solvers.SolverCubicNewtonMiniBatch import SolverCubicNewtonMiniBatch
-from oracle.solvers.StochasticOracle import StochasticOracle
-from oracle.solvers.SubProblemCubicNewton import SubProblemCubicNewton
+from optimization.utils.Module import Module
+from optimization.solvers.SolverCubicNewtonMiniBatch import SolverCubicNewtonMiniBatch
+from optimization.oracles.StochasticOracle import StochasticOracle
+from optimization.solvers.SubProblemCubicNewton import SubProblemCubicNewton
 
 
 def test_01():

@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from oracle.solvers.StochasticOracle import StochasticOracle
+from optimization.oracles.StochasticOracle import StochasticOracle
 
 
 class Solver(ABC):
@@ -27,7 +27,7 @@ class Solver(ABC):
             x_t: np.ndarray,
             **kwargs) -> np.array:
         """
-        find the best fitted parameter to minimize the objective function provided in oracle
+        find the best fitted parameter to minimize the objective function provided in optimization
         Args:
             x_t: np.ndarray
             kwargs: dict()
