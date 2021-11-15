@@ -18,9 +18,9 @@ from optimization.utils.Oracle import Oracle
 
 class StochasticOracle(Oracle):
 
-    def compute_oracle(self, x_t):
+    def compute_oracle(self, x_t, **kwargs):
         s1, s2 = self.module.get_samples(self.n1, self.n2)
         g_t = self.module.gradient(x_t, s1).reshape((self.n1, 1)).mean(axis=0)
         B_t = lambda v: 1 / self.n2 * self.module.hessian_vector(x_t, v, s2, self.r).sum(axis=0)
 
-        return g_t, B_t
+        return g_t, B_t, None
