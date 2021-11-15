@@ -28,7 +28,7 @@ class StormOracle(Oracle):
 
     def compute_oracle(self, x_t, **kwargs):
         s1, s2 = self.module.get_samples(1, 1)
-        gradient = self.module.gradient(x_t, s1)
+        gradient = self.module.gradient(x_t, s1).reshape(-1)
 
         # Storing all gradients in a list
         if "grads" in self.state:
@@ -50,7 +50,7 @@ class StormOracle(Oracle):
                 scaling = np.power((0.1 + self.state["sqr_grads_norms"]), power)
                 kwargs["lr"] = self.k / (float)(scaling)
             # Storing the momentum term
-            self.state["d"] = self.state["d"][-1]
+            self.state["d"] = self.state["grads"][-1]
         else:
             # Updating learning rate('η' in paper) if lr is in kwargs
             if "lr" in kwargs:

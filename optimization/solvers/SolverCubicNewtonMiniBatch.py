@@ -11,8 +11,8 @@ from optimization.utils.Solver import Solver
 
 class SolverCubicNewtonMiniBatch(Solver):
 
-    def __init__(self, sub_solver, oracle, max_iter=1000, ro=0.1, l=0.5, epsilon=1e-3, learning_rate=0.001):
-        super().__init__(oracle, ro, l, max_iter, epsilon, learning_rate)
+    def __init__(self, sub_solver, oracle, max_iter=1000, ro=0.1, l=0.5, epsilon=1e-3, lr=0.001):
+        super().__init__(oracle, ro, l, max_iter, epsilon, lr)
         self.sub_solver = sub_solver
 
     def run(self, x_t, **kwargs):
