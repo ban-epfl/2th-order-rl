@@ -59,17 +59,17 @@ def test_05():
     print("running test 5...")
 
     gd_solver = SubProblemCubicNewton(max_iter=10, c_prime=0.1)
-    oracle = NormalNoiseOracle(module=WLooking(), n1=100, n2=100,r=1e-4)
+    oracle = StochasticOracle(module=WLooking(), n1=100, n2=100,r=1e-4)
     ms = SolverCubicNewtonMiniBatch(sub_solver=gd_solver, oracle=oracle,
-                                    max_iter=2000, ro=4, l=5, epsilon=1e-5, )
+                                    max_iter=2000, ro=0.01, l=5, epsilon=1e-5, )
     print("best parameters", ms.run(np.random.RandomState(seed=42).rand(2)),'\n')
 
 def test_06():
     print("running test 6...")
 
-    oracle = NormalNoiseOracle(module=WLooking(), n1=200, n2=200)
-    ms = SolverSGD( oracle=oracle, max_iter=8000, ro=1, l=4, epsilon=1e-6, lr=1e-5)
+    oracle = NormalNoiseOracle(module=WLooking(), n1=100, n2=100)
+    ms = SolverSGD( oracle=oracle, max_iter=30000, lr=1e-3)
     print("best parameters", ms.run(np.random.RandomState(seed=42).rand(2)),'\n')
 
 test_05()
-# test_04()
+test_06()
