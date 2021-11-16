@@ -100,5 +100,5 @@ def test_06():
     print("best parameters",thetas ,'\n')
 
 
-test_05()
+test_01()
 # test_06()
