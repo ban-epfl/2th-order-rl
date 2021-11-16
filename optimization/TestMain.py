@@ -7,6 +7,7 @@
 # author: mohammadsakh@gmail.com
 #
 # Here we put the general tests.
+import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,12 +25,20 @@ from optimization.utils.Oracle import Oracle
 def test_01():
     print("running test 1...")
 
-    gd_solver = SubProblemCubicNewton(max_iter=1000, c_prime=0.01)
-    oracle = StochasticOracle(module=OneDimQuad(), n1=10000, n2=10000)
+    gd_solver = SubProblemCubicNewton(max_iter=1000, c_prime=0.0001)
+    oracle = StochasticOracle(module=OneDimQuad(), n1=1000, n2=1000)
     ms = SolverCubicNewtonMiniBatch(sub_solver=gd_solver, oracle=oracle,
-                                    max_iter=2000, ro=0.001, l=4, epsilon=1e-5)
-    print("best parameters", ms.run(np.random.RandomState(seed=42).rand(1)),'\n')
+                                    max_iter=2000, ro=0.0001, l=4, epsilon=1e-5)
+    thetas, objective_values= ms.run(np.random.RandomState(seed=42).rand(1))
 
+    # plot the objective value list
+    plt.plot(range(len(objective_values)),
+             objective_values)
+    plt.xlabel('iteration')
+    plt.ylabel('objective value')
+    # plt.show()
+    plt.savefig("plots/OneDimQuad_SolverCubicNewtonMiniBatch")
+    print("best parameters",thetas ,'\n')
 
 def test_02():
     print("running test 2...")
@@ -58,19 +67,38 @@ def test_04():
 def test_05():
     print("running test 5...")
 
-    gd_solver = SubProblemCubicNewton(max_iter=10, c_prime=0.1)
+    gd_solver = SubProblemCubicNewton(max_iter=10, c_prime=0.5)
     oracle = StochasticOracle(module=WLooking(), n1=100, n2=100,r=1e-4)
     ms = SolverCubicNewtonMiniBatch(sub_solver=gd_solver, oracle=oracle,
-                                    max_iter=2000, ro=0.01, l=5, epsilon=1e-5, )
-    print("best parameters", ms.run(np.random.RandomState(seed=42).rand(2)),'\n')
+                                    max_iter=60000, ro=1, l=10, epsilon=1e-2, )
+    thetas, objective_values = ms.run(np.random.RandomState(seed=45).rand(2))
+    # plot the objective value list
+    plt.clf()
+    plt.plot(1e-6*np.array(range(len(objective_values[5:]))),
+             objective_values[5:])
+    plt.xlabel('oracle calls (1e6)')
+    plt.ylabel('objective value')
+    plt.legend(['Cubic',  ], loc='upper right')
+    plt.savefig("plots/SolverCubicNewtonMiniBatch")
+    print("best parameters", thetas, '\n')
 
 def test_06():
     print("running test 6...")
 
     oracle = NormalNoiseOracle(module=WLooking(), n1=100, n2=100)
-    ms = SolverSGD( oracle=oracle, max_iter=30000, lr=1e-3)
-    print("best parameters", ms.run(np.random.RandomState(seed=42).rand(2)),'\n')
+    ms = SolverSGD( oracle=oracle, max_iter=60000, lr=1e-3)
+    thetas, objective_values= ms.run(np.random.RandomState(seed=45).rand(2))
+    # plot the objective value list
+    # plt.clf()
+    plt.plot(1e-4*np.array(range(len(objective_values[160:10000]))),
+             objective_values[160:10000])
+
+    plt.xlabel('oracle calls (1e6)')
+    plt.ylabel('objective value')
+    plt.legend(['SGD',  ], loc='upper right')
+    plt.savefig("plots/SolverSGD")
+    print("best parameters",thetas ,'\n')
 
 
-# test_05()
-test_06()
+test_05()
+# test_06()

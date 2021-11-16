@@ -32,7 +32,7 @@ class WLooking(Module):
             w_output = sqrt_e * (x[0] - (L + 1) * sqrt_e) ** 2 + 1 / 3 * (x[0] - (L + 1) * sqrt_e) ** 3 - 1 / 3 * (
                     3 * L + 1) * e ** 1.5
 
-        return np.tile([w_output + 10 * x[1] ** 2], (z.shape[0], 1))
+        return np.array([w_output + 10 * x[1] ** 2]*z.shape[0])
 
     def gradient(self, x, z):
         L = self.L
@@ -53,6 +53,23 @@ class WLooking(Module):
             w_output = 2 * sqrt_e * (x[0] - (L + 1) * sqrt_e) + (x[0] - (L + 1) * sqrt_e) ** 2
 
         return np.tile([w_output , 20 * x[1]],(z.shape[0],1))
+
+    def hessian_vector(self, x, v, z, r):
+        L = self.L
+        e = self.e
+        sqrt_e = e ** 0.5
+        if x[0] <= -L * sqrt_e:
+            w_output = 2 * sqrt_e  - 2*(x[0] + (L + 1) * sqrt_e)
+        elif -sqrt_e < x[0] <= 0:
+            w_output = -2 * sqrt_e  - 2*x[0]
+        elif 0 < x[0] <= sqrt_e:
+            w_output = -2 * sqrt_e  + 2*x[0]
+        elif L * sqrt_e <= x[0]:
+            w_output = 2 * sqrt_e  + 2*(x[0] - (L + 1) * sqrt_e)
+        else:
+            w_output=0
+        hessian= np.tile([[w_output, 0],[0, 20]], (z.shape[0], 1, 1))
+        return np.matmul(hessian, v.reshape(2,1)).squeeze()
 
 
 

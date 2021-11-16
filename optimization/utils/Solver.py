@@ -7,6 +7,7 @@
 # author: mohammadsakh@gmail.com
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import numpy as np
 
@@ -27,7 +28,7 @@ class Solver(ABC):
     @abstractmethod
     def run(self,
             x_t: np.ndarray,
-            **kwargs) -> np.array:
+            **kwargs) -> (np.array, Any):
         """
         find the best fitted parameter to minimize the objective function provided in optimization
         Args:

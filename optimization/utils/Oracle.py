@@ -40,6 +40,9 @@ class Oracle(ABC):
         Args:
             x_t: np.ndarray
         Returns:
-            Tuple[np.ndarray, function]
+            Tuple[np.ndarray, np.ndarray, function]
+            the first one in the above list is F(X) as a float type
+            the second one in the above list is gradient of F(X) with the length of parameter_num
+            the third one in the above list is hessian function which computes the hessian-vector by getting list of samples
         """
         pass
