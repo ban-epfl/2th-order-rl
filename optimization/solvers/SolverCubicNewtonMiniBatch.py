@@ -16,11 +16,14 @@ class SolverCubicNewtonMiniBatch(Solver):
         self.sub_solver = sub_solver
 
     def run(self, x_t, **kwargs):
-
+        print("SolverCubicNewtonMiniBatch optimizing... ")
         for i in range(self.max_iter):
-            print("iteration: ", i)
+            print("iteration= ",i)
             g_t, B_t, _ = self.oracle.compute_oracle(x_t, )
+            print("iteration1= ",i)
             delta, delta_m = self.sub_solver.solve(g_t, B_t, self.epsilon, self.ro, self.l)
+            print("iteration2= ",i)
+
             x_t1 = x_t + delta
             if delta_m >= -(self.epsilon ** 3 / self.ro) ** 0.5 / 100:
                 delta = self.sub_solver.final_solve(g_t, B_t, self.epsilon, self.ro, self.l)

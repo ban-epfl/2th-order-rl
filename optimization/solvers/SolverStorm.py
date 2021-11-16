@@ -15,9 +15,9 @@ class SolverStorm(Solver):
         super().__init__(oracle, ro, l, max_iter, epsilon, lr)
 
     def run(self, x_t, **kwargs):
+        print("SolverStorm optimizing... ")
         eta=self.lr
         for i in range(self.max_iter):
-            print("iteration: ", i)
             g_t, _, training_data = self.oracle.compute_oracle(x_t, lr=eta)
             eta = training_data["lr"]
             x_t = x_t - eta * g_t
