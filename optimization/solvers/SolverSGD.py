@@ -21,6 +21,6 @@ class SolverSGD(Solver):
     def run(self, x_t, **kwargs):
         print("SolverSGD optimizing... ")
         for i in range(self.max_iter):
-            g_t, _, _ = self.oracle.compute_oracle(x_t, )
+            objective_value, g_t, _, _ = self.oracle.compute_oracle(x_t, )
             x_t = x_t - self.lr * g_t
         return x_t

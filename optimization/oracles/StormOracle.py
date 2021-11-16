@@ -28,6 +28,7 @@ class StormOracle(Oracle):
 
     def compute_oracle(self, x_t, **kwargs):
         s1, s2 = self.module.get_samples(1, 1)
+        objective_value = self.module.forward(x_t, s1).mean(axis=0)
         gradient = self.module.gradient(x_t, s1).reshape(-1)
 
         # Storing all gradients in a list
@@ -64,4 +65,4 @@ class StormOracle(Oracle):
             # Storing the momentum term(d'=∇f(x',ε')+(1-a')(d-∇f(x,ε')))
             self.state["d"] = self.state["grads"][-1] + (1 - a) * (self.state["d"] - self.state["grads"][-2])
 
-        return self.state["d"], None, kwargs
+        return objective_value, self.state["d"], None, kwargs

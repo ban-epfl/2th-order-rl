@@ -34,7 +34,7 @@ class Oracle(ABC):
     def compute_oracle(self,
                        x_t: np.ndarray,
                        **kwargs
-                       ) -> Tuple[np.ndarray, Any, dict]:
+                       ) -> Tuple[float, np.ndarray, Any, dict]:
         """
         compute the tuple of [gradient , hessian-vector function]
         Args:

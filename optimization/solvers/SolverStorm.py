@@ -18,7 +18,7 @@ class SolverStorm(Solver):
         print("SolverStorm optimizing... ")
         eta=self.lr
         for i in range(self.max_iter):
-            g_t, _, training_data = self.oracle.compute_oracle(x_t, lr=eta)
+            objective_value, g_t, _, training_data = self.oracle.compute_oracle(x_t, lr=eta)
             eta = training_data["lr"]
             x_t = x_t - eta * g_t
 

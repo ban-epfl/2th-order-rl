@@ -19,7 +19,7 @@ class SolverCubicNewtonMiniBatch(Solver):
         print("SolverCubicNewtonMiniBatch optimizing... ")
         for i in range(self.max_iter):
             print("iteration= ",i)
-            g_t, B_t, _ = self.oracle.compute_oracle(x_t, )
+            objective_valuem, g_t, B_t, _ = self.oracle.compute_oracle(x_t, )
             print("iteration1= ",i)
             delta, delta_m = self.sub_solver.solve(g_t, B_t, self.epsilon, self.ro, self.l)
             print("iteration2= ",i)

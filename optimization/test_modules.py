@@ -32,7 +32,7 @@ class WLooking(Module):
             w_output = sqrt_e * (x[0] - (L + 1) * sqrt_e) ** 2 + 1 / 3 * (x[0] - (L + 1) * sqrt_e) ** 3 - 1 / 3 * (
                     3 * L + 1) * e ** 1.5
 
-        return w_output + 10 * x[1] ** 2
+        return np.tile([w_output + 10 * x[1] ** 2], (z.shape[0], 1))
 
     def gradient(self, x, z):
         L = self.L

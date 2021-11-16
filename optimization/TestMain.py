@@ -9,7 +9,7 @@
 # Here we put the general tests.
 
 import numpy as np
-
+import matplotlib.pyplot as plt
 from optimization.oracles.NormalNoiseOracle import NormalNoiseOracle
 from optimization.oracles.StochasticOracle import StochasticOracle
 from optimization.oracles.StormOracle import StormOracle
@@ -71,5 +71,6 @@ def test_06():
     ms = SolverSGD( oracle=oracle, max_iter=30000, lr=1e-3)
     print("best parameters", ms.run(np.random.RandomState(seed=42).rand(2)),'\n')
 
-test_05()
+
+# test_05()
 test_06()
