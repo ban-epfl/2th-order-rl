@@ -28,13 +28,12 @@ class Oracle(ABC):
         self.r = r
         self.n1 = n1
         self.n2 = n2
-        self.state = dict()
 
     @abstractmethod
     def compute_oracle(self,
                        x_t: np.ndarray,
                        **kwargs
-                       ) -> Tuple[float, np.ndarray, Any, dict]:
+                       ) -> Tuple[float, np.ndarray, Any, Any]:
         """
         compute the tuple of [gradient , hessian-vector function]
         Args:

@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 
 class SolverSGD(Solver):
 
-    def __init__(self, oracle, max_iter=1000, ro=0.1, l=0.5, epsilon=1e-3, lr=0.001):
-        super().__init__(oracle, ro, l, max_iter, epsilon, lr)
+    def __init__(self, oracle, max_iter=1000, lr=0.001):
+        super().__init__(oracle, None, None, max_iter, None, lr)
 
     def run(self, x_t, **kwargs):
         print("SolverSGD optimizing... ")

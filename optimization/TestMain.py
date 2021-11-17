@@ -52,16 +52,34 @@ def test_02():
 
 def test_03():
     print("running test 3...")
-    oracle = StochasticOracle(module=WLooking(), n1=1, n2=1)
-    ms = SolverSGD(oracle=oracle, max_iter=2000, ro=0.001, l=4, epsilon=1e-5)
-    print("best parameters", ms.run(np.random.RandomState(seed=42).rand(1)),'\n')
+    oracle = StochasticOracle(module=OneDimQuad(), n1=1, n2=1)
+    ms = SolverSGD(oracle=oracle, max_iter=2000,)
+    thetas, objective_values = ms.run(np.random.RandomState(seed=45).rand(1))
+    # plot the objective value list
+    plt.clf()
+    plt.plot(1e-6 * np.array(range(len(objective_values[5:]))),
+             objective_values[5:])
+    plt.xlabel('oracle calls (1e6)')
+    plt.ylabel('objective value')
+    plt.legend(['Storm', ], loc='upper right')
+    plt.savefig("plots/OneDimQuad_SolverSGD")
+    print("best parameters", thetas, '\n')
 
 
 def test_04():
     print("running test 4...")
-    oracle = StormOracle(module=OneDimQuad(), n1=1, n2=1)
-    ms = SolverStorm(oracle=oracle, max_iter=3000, lr=1e-5)
-    print("best parameters", ms.run(np.random.RandomState(seed=42).rand(1)),'\n')
+    oracle = StormOracle(module=OneDimQuad(), k=1e-2, c_factor=100, n1=1 )
+    ms = SolverStorm(oracle=oracle, max_iter=9000,)
+    thetas, objective_values = ms.run(np.random.RandomState(seed=45).rand(1))
+    # plot the objective value list
+    plt.clf()
+    plt.plot(1e-6 * np.array(range(len(objective_values[5:]))),
+             objective_values[5:])
+    plt.xlabel('oracle calls (1e6)')
+    plt.ylabel('objective value')
+    # plt.legend(['Storm', ], loc='upper right')
+    # plt.savefig("plots/OneDimQuad_SolverStorm")
+    print("best parameters", thetas, '\n')
 
 
 def test_05():
@@ -100,5 +118,5 @@ def test_06():
     print("best parameters",thetas ,'\n')
 
 
-test_01()
-# test_06()
+test_05()
+test_06()

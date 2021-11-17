@@ -19,50 +19,44 @@ from optimization.utils.Oracle import Oracle
 
 class StormOracle(Oracle):
 
-    def __init__(self, module: Module, n1: int, n2: int, k=0.1, w=0.1, c_factor=0.01, default_a=0.1):
+    def __init__(self, module: Module, n1=1, k=0.1, w=0.1, c_factor=0.01,):
         self.k = k
         self.w = w
         self.c_factor = c_factor
-        self.default_a = default_a
-        super().__init__(module, n1, n2)
+        self.grads=[]
+        self.sqr_grads_norms=0
+        self.d=None
+        self.eta=k/(w**(1/3))
+
+        super().__init__(module, n1, 0)
 
     def compute_oracle(self, x_t, **kwargs):
-        s1, s2 = self.module.get_samples(1, 1)
+        s1, _ = self.module.get_samples(self.n1, self.n2)
         objective_value = self.module.forward(x_t, s1).mean(axis=0)
-        gradient = self.module.gradient(x_t, s1).reshape(-1)
+        gradient = self.module.gradient(x_t, s1).mean(axis=0).reshape(-1)
 
         # Storing all gradients in a list
-        if "grads" in self.state:
-            self.state["grads"].append(gradient)
-        else:
-            self.state["grads"] = [gradient]
+        self.grads.append(gradient)
 
         # Calculating and storing ∑G^2in sqrgradnorm
-        if "sqr_grad_norm" in self.state:
-            self.state["sqr_grads_norms"] += np.power(np.linalg.norm(gradient, ord=2), 2)
-        else:
-            self.state["sqr_grads_norms"] = np.power(np.linalg.norm(gradient, ord=2), 2)
+        self.sqr_grads_norms += np.power(np.linalg.norm(gradient, ord=2), 2)
 
         # Calculating and storing the momentum term(d'=∇f(x',ε')+(1-a')(d-∇f(x,ε')))
-        if "d" not in self.state:
-            # Updating learning rate('η' in paper) if lr is in kwargs
-            if "lr" in kwargs:
-                power = 1.0 / 3.0
-                scaling = np.power((0.1 + self.state["sqr_grads_norms"]), power)
-                kwargs["lr"] = self.k / (float)(scaling)
+        if self.d is None:
+            # Updating learning rate('η' in paper)
+            power = 1.0 / 3.0
+            scaling = np.power((0.1 + self.sqr_grads_norms), power)
+            self.eta = self.k / (float)(scaling)
             # Storing the momentum term
-            self.state["d"] = self.state["grads"][-1]
+            self.d = self.grads[-1]
         else:
-            # Updating learning rate('η' in paper) if lr is in kwargs
-            if "lr" in kwargs:
-                # Calculating 'a' mentioned as a=cη^2 in paper(denoted 'c' as factor here)
-                a = min(self.c_factor * kwargs["lr"] ** 2.0, 1.0)
-                power = 1.0 / 3.0
-                scaling = np.power((0.1 + self.state["sqr_grads_norms"]), power)
-                kwargs["lr"] = self.k / (float)(scaling)
-            else:
-                a = self.default_a
+            # Updating learning rate('η' in paper)
+            # Calculating 'a' mentioned as a=cη^2 in paper(denoted 'c' as factor here)
+            a = min(self.c_factor * self.eta ** 2.0, 1.0)
+            power = 1.0 / 3.0
+            scaling = np.power((0.1 + self.sqr_grads_norms), power)
+            self.eta = self.k / (float)(scaling)
             # Storing the momentum term(d'=∇f(x',ε')+(1-a')(d-∇f(x,ε')))
-            self.state["d"] = self.state["grads"][-1] + (1 - a) * (self.state["d"] - self.state["grads"][-2])
+            self.d = self.grads[-1] + (1 - a) * (self.d - self.grads[-2])
 
-        return objective_value, self.state["d"], None, kwargs
+        return objective_value, self.d, None, self.eta
