@@ -52,8 +52,8 @@ def test_02():
 
 def test_03():
     print("running test 3...")
-    oracle = StochasticOracle(module=OneDimQuad(), n1=1, n2=1)
-    ms = SolverSGD(oracle=oracle, max_iter=2000,)
+    oracle = StochasticOracle(module=OneDimQuad(), n1=1000, n2=1)
+    ms = SolverSGD(oracle=oracle, max_iter=9000,)
     thetas, objective_values = ms.run(np.random.RandomState(seed=45).rand(1))
     # plot the objective value list
     plt.clf()
@@ -85,19 +85,19 @@ def test_04():
 def test_05():
     print("running test 5...")
 
-    gd_solver = SubProblemCubicNewton(max_iter=10, c_prime=0.5)
-    oracle = StochasticOracle(module=WLooking(), n1=100, n2=100,r=1e-4)
+    gd_solver = SubProblemCubicNewton(max_iter=10, c_prime=0.1)
+    oracle = NormalNoiseOracle(module=WLooking(), n1=100, n2=100)
     ms = SolverCubicNewtonMiniBatch(sub_solver=gd_solver, oracle=oracle,
-                                    max_iter=60000, ro=1, l=10, epsilon=1e-2, )
+                                    max_iter=60000, ro=1, l=100, epsilon=1e-4, )
     thetas, objective_values = ms.run(np.random.RandomState(seed=45).rand(2))
     # plot the objective value list
     plt.clf()
-    plt.plot(1e-6*np.array(range(len(objective_values[5:]))),
-             objective_values[5:])
+    plt.plot(1e-4*np.array(range(len(objective_values)))[150:600],
+             objective_values[150:600])
     plt.xlabel('oracle calls (1e6)')
     plt.ylabel('objective value')
     plt.legend(['Cubic',  ], loc='upper right')
-    plt.savefig("plots/SolverCubicNewtonMiniBatch")
+    plt.savefig("plots/WLooking_SolverCubicNewtonMiniBatch")
     print("best parameters", thetas, '\n')
 
 def test_06():
@@ -107,14 +107,14 @@ def test_06():
     ms = SolverSGD( oracle=oracle, max_iter=60000, lr=1e-3)
     thetas, objective_values= ms.run(np.random.RandomState(seed=45).rand(2))
     # plot the objective value list
-    # plt.clf()
-    plt.plot(1e-4*np.array(range(len(objective_values[160:10000]))),
-             objective_values[160:10000])
+    plt.clf()
+    plt.plot(1e-4*np.array(range(len(objective_values)))[150:600],
+             objective_values[150:600])
 
     plt.xlabel('oracle calls (1e6)')
     plt.ylabel('objective value')
-    plt.legend(['SGD',  ], loc='upper right')
-    plt.savefig("plots/SolverSGD")
+    plt.legend(['SGD'], loc='upper right')
+    plt.savefig("plots/WLooking_SolverSGD")
     print("best parameters",thetas ,'\n')
 
 

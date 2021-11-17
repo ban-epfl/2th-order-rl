@@ -40,11 +40,11 @@ class SubProblemCubicNewton:
             delta = -R_c * g_t / g_t_norm
 
         else:
-            delta, sigma, zigma = np.zeros(g_t.shape[0]), self.c_prime * (epsilon * ro) ** 0.5 / l, 1 / (20 * l)
-            khi = np.random.uniform(0, 1)
+            delta, sigma, eta = np.zeros(g_t.shape[0]), self.c_prime * (epsilon * ro) ** 0.5 / l, 1 / (20 * l)
+            khi = np.random.uniform(0, 1, g_t.shape)
             g_tilda = g_t + sigma * khi
             for i in range(self.max_iter):
-                delta -= zigma * (g_tilda + B_t(delta) + ro / 2 * np.linalg.norm(delta, ord=2) * delta)
+                delta -= eta * (g_tilda + eta*B_t(delta) + ro / 2 * np.linalg.norm(delta, ord=2) * delta)
         delta_m = np.dot(g_t, delta) + 0.5 * np.dot(delta, B_t(delta)) + ro / 6 * np.linalg.norm(delta, ord=2)**3
 
         return delta, delta_m
@@ -66,9 +66,9 @@ class SubProblemCubicNewton:
         Returns:
             np.ndarray ( step amount to next param-value )
         """
-        delta, g_m, zigma = np.zeros(g_t.shape[0]), g_t, 1 / (20 * l)
+        delta, g_m, eta = np.zeros(g_t.shape[0]), g_t, 1 / (20 * l)
         while np.linalg.norm(g_m, ord=2) > epsilon/2:
-            delta = delta - zigma * g_m
+            delta = delta - eta * g_m
             g_m = g_t + B_t(delta) + ro / 2 * np.linalg.norm(delta, ord=2) * delta
 
         return delta
