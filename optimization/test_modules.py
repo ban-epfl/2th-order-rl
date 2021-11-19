@@ -1,9 +1,9 @@
 import numpy as np
 
-from optimization.utils.Module import Module
+from optimization.utils.ObjectiveFunction import ObjectiveFunction
 
 
-class WLooking(Module):
+class WLooking(ObjectiveFunction):
 
     def __init__(self):
         self.L = 5
@@ -73,7 +73,7 @@ class WLooking(Module):
 
 
 
-class OneDimQuad(Module):
+class OneDimQuad(ObjectiveFunction):
 
     def get_sample_dim(self) -> int:
         return 3
@@ -88,7 +88,7 @@ class OneDimQuad(Module):
         return np.matmul(np.expand_dims(2 * z[:, 0], axis=1), np.expand_dims(v, axis=1))
 
 
-class ThreeDimQuad(Module):
+class ThreeDimQuad(ObjectiveFunction):
 
     def get_sample_dim(self) -> int:
         return 3

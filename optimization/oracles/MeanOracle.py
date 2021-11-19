@@ -11,17 +11,14 @@
 # The functions to get value/derivate information here are "virtual" and need to be
 # implemented for specific functions.
 
-import numpy as np
-
-from optimization.utils.Oracle import Oracle
+from optimization.utils.StochasticOracle import StochasticOracle
 
 
-class StochasticOracle(Oracle):
+class MeanOracle(StochasticOracle):
 
     def compute_oracle(self, x_t, **kwargs):
-        s1, s2 = self.module.get_samples(self.n1, self.n2)
-        objective_value = self.module.forward(x_t, s1).mean(axis=0)
-        g_t = self.module.gradient(x_t, s1).mean(axis=0)
-        B_t = lambda v: 1 / self.n2 * self.module.hessian_vector(x_t, v, s2, self.r).sum(axis=0)
+        objective_value = self.objective_function.forward(x_t, self.s1).mean(axis=0)
+        g_t = self.objective_function.gradient(x_t, self.s1).mean(axis=0)
+        B_t = lambda v: 1 / self.n2 * self.objective_function.hessian_vector(x_t, v, self.s2, self.r).sum(axis=0)
 
         return objective_value, g_t, B_t, None

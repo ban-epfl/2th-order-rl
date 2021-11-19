@@ -6,7 +6,6 @@
 # author: pedro.borges.melo@gmail.com
 # author: mohammadsakh@gmail.com
 import numpy as np
-
 from optimization.utils.Solver import Solver
 
 
@@ -21,6 +20,7 @@ class SolverCubicNewtonMiniBatch(Solver):
         objective_value_list=[]
         for i in range(self.max_iter):
             print("iteration= ",i)
+            self.oracle.update_sample()
             objective_value, g_t, B_t, _ = self.oracle.compute_oracle(x_t, )
             objective_value_list.append(objective_value)
             print("iteration1= ",i)

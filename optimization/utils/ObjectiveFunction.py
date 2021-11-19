@@ -4,7 +4,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 
 
-class Module(ABC):
+class ObjectiveFunction(ABC):
 
     @abstractmethod
     def forward(self,

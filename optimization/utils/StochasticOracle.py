@@ -14,20 +14,23 @@
 from typing import Tuple, Any
 import numpy as np
 
-from optimization.utils.Module import Module
+from optimization.utils.ObjectiveFunction import ObjectiveFunction
 from abc import ABC, abstractmethod
 
 
-class Oracle(ABC):
+class StochasticOracle(ABC):
 
-    def __init__(self, module: Module,
+    def __init__(self, objective_function: ObjectiveFunction,
                  n1: int,
                  n2: int,
                  r=0.001):
-        self.module = module
+        self.objective_function = objective_function
         self.r = r
         self.n1 = n1
         self.n2 = n2
+        self.s1=None
+        self.s2=None
+
 
     @abstractmethod
     def compute_oracle(self,
@@ -45,3 +48,14 @@ class Oracle(ABC):
             the third one in the above list is hessian function which computes the hessian-vector by getting list of samples
         """
         pass
+
+    def update_sample(self,):
+        """
+        update the samples in Oracle class ( self.s1 and self.s2 )
+
+        Nothing Returns
+
+        """
+        self.s1, self.s2 = self.objective_function.get_samples(self.n1, self.n2)
+
+

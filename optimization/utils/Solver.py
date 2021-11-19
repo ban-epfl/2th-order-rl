@@ -11,13 +11,12 @@ from typing import Any
 
 import numpy as np
 
-from optimization.oracles.StochasticOracle import StochasticOracle
-from optimization.utils.Oracle import Oracle
+from optimization.utils.StochasticOracle import StochasticOracle
 
 
 class Solver(ABC):
 
-    def __init__(self, oracle: Oracle, ro, l, max_iter, epsilon, lr):
+    def __init__(self, oracle: StochasticOracle, ro, l, max_iter, epsilon, lr):
         self.ro = ro
         self.l = l
         self.oracle = oracle

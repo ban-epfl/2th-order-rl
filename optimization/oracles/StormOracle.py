@@ -13,13 +13,13 @@
 
 import numpy as np
 
-from optimization.utils.Module import Module
-from optimization.utils.Oracle import Oracle
+from optimization.utils.ObjectiveFunction import ObjectiveFunction
+from optimization.utils.StochasticOracle import StochasticOracle
 
 
-class StormOracle(Oracle):
+class StormOracle(StochasticOracle):
 
-    def __init__(self, module: Module, n1=1, k=0.1, w=0.1, c_factor=0.01,):
+    def __init__(self, objective_function: ObjectiveFunction, n1=1, k=0.1, w=0.1, c_factor=0.01, ):
         self.k = k
         self.w = w
         self.c_factor = c_factor
@@ -28,12 +28,11 @@ class StormOracle(Oracle):
         self.d=None
         self.eta=k/(w**(1/3))
 
-        super().__init__(module, n1, 0)
+        super().__init__(objective_function, n1, 0)
 
     def compute_oracle(self, x_t, **kwargs):
-        s1, _ = self.module.get_samples(self.n1, self.n2)
-        objective_value = self.module.forward(x_t, s1).mean(axis=0)
-        gradient = self.module.gradient(x_t, s1).mean(axis=0).reshape(-1)
+        objective_value = self.objective_function.forward(x_t, self.s1).mean(axis=0)
+        gradient = self.objective_function.gradient(x_t, self.s1).mean(axis=0).reshape(-1)
 
         # Storing all gradients in a list
         self.grads.append(gradient)
