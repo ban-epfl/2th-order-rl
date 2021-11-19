@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from optimization.oracles.NormalNoiseOracle import NormalNoiseOracle
 from optimization.oracles.MeanOracle import MeanOracle
 from optimization.oracles.StormOracle import StormOracle
+from optimization.solvers.GradientLeastSquares import GradientLeastSquares
 from optimization.test_modules import WLooking, OneDimQuad, ThreeDimQuad
 from optimization.solvers.SolverSGD import SolverSGD
 from optimization.solvers.SolverStorm import SolverStorm
@@ -116,5 +117,23 @@ def test_06():
     print("best parameters",thetas ,'\n')
 
 
-test_05()
-test_06()
+def test_07():
+    print("running test 7...")
+
+    oracle = MeanOracle(objective_function=OneDimQuad(), n1=1, n2=1)
+    ms = GradientLeastSquares( oracle=oracle, j1=100, j2=100, l=5, alpha=0.2)
+    thetas, objective_values= ms.run(np.random.RandomState(seed=45).rand(1))
+    # plot the objective value list
+    # plt.clf()
+    # plt.plot(1e-4*np.array(range(len(objective_values)))[150:600],
+    #          objective_values[150:600])
+    #
+    # plt.xlabel('oracle calls (1e6)')
+    # plt.ylabel('objective value')
+    # plt.legend(['GradientLeastSquares'], loc='upper right')
+    # plt.savefig("plots/OneDimQuad_GradientLeastSquares")
+    print("best parameters",thetas ,'\n')
+
+
+# test_05()
+test_07()
