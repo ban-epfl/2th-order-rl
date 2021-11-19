@@ -63,5 +63,6 @@ class GradientLeastSquares(Solver):
         regr = linear_model.LinearRegression()
 
         # Train the model using the training sets
-        regr.fit(diabetes_X_train, diabetes_y_train)
+        regr.fit(A, b)
+        regr.
         return np.linalg.lstsq(A, b,)[0], None
