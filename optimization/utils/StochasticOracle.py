@@ -66,5 +66,5 @@ class StochasticOracle(ABC):
             raise ValueError('Please set oracle sample size n1 and n2!')
 
         self.s1, self.s2 = self.objective_function.get_samples(self.n1, self.n2)
-        tem_s1, _ = self.objective_function.get_samples(1000, 0)
-        self.objective_values += [self.objective_function.forward(x_t, tem_s1).mean(axis=0)] * self.n1
+        tem_s1, _ = self.objective_function.get_samples(2000, 0)
+        self.objective_values += [self.objective_function.forward(x_t, tem_s1).mean(axis=0)] * (self.n1+self.n2)
