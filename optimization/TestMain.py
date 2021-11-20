@@ -67,7 +67,7 @@ def test_03():
 
 def test_04():
     print("running test 4...")
-    oracle = StormOracle(objective_function=OneDimQuad(), k=1e-2, c_factor=100, n1=1 )
+    oracle = StormOracle(objective_function=OneDimQuad(), k=1e-2, c_factor=100,)
     ms = SolverStorm(oracle=oracle, max_iter=9000,)
     thetas, objective_values = ms.run(np.random.RandomState(seed=45).rand(1))
     # plot the objective value list
@@ -121,7 +121,7 @@ def test_07():
     print("running test 7...")
 
     oracle = MeanOracle(objective_function=OneDimQuad(), n1=1, n2=1)
-    ms = GradientLeastSquares( oracle=oracle, j1=100, j2=100, l=5, alpha=0.2)
+    ms = GradientLeastSquares( oracle=oracle, j1=50, j2=50, l=0.1, alpha=0.70, max_iter=1000)
     thetas, objective_values= ms.run(np.random.RandomState(seed=45).rand(1))
     # plot the objective value list
     # plt.clf()

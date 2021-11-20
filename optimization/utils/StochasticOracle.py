@@ -21,16 +21,19 @@ from abc import ABC, abstractmethod
 class StochasticOracle(ABC):
 
     def __init__(self, objective_function: ObjectiveFunction,
-                 n1: int,
-                 n2: int,
                  r=0.001):
         self.objective_function = objective_function
         self.r = r
+        self.s1 = None
+        self.s2 = None
+        self.n1 = None
+        self.n2 = None
+
+    def set_oracle_sample_size(self,
+                               n1: int,
+                               n2: int):
         self.n1 = n1
         self.n2 = n2
-        self.s1=None
-        self.s2=None
-
 
     @abstractmethod
     def compute_oracle(self,
@@ -49,13 +52,14 @@ class StochasticOracle(ABC):
         """
         pass
 
-    def update_sample(self,):
+    def update_sample(self, ):
         """
         update the samples in Oracle class ( self.s1 and self.s2 )
 
         Nothing Returns
 
         """
+        if self.n1 is None or self.n2 is None:
+            raise ValueError('Please set oracle sample size n1 and n2!')
+
         self.s1, self.s2 = self.objective_function.get_samples(self.n1, self.n2)
-
-

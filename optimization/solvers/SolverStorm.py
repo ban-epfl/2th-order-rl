@@ -11,8 +11,8 @@ from optimization.utils.Solver import Solver
 
 class SolverStorm(Solver):
 
-    def __init__(self, oracle, max_iter=1000, ):
-        super().__init__(oracle, None, None, max_iter, None, None)
+    def __init__(self, oracle, max_iter=1000, n1=1, ):
+        super().__init__(oracle, None, None, max_iter, None, None, n1, 0)
 
     def run(self, x_t, **kwargs):
         print("SolverStorm optimizing... ")

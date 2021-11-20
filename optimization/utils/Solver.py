@@ -16,13 +16,14 @@ from optimization.utils.StochasticOracle import StochasticOracle
 
 class Solver(ABC):
 
-    def __init__(self, oracle: StochasticOracle, ro, l, max_iter, epsilon, lr):
+    def __init__(self, oracle: StochasticOracle, ro, l, max_iter, epsilon, lr, n1, n2):
         self.ro = ro
         self.l = l
         self.oracle = oracle
         self.max_iter = max_iter
         self.epsilon = epsilon
         self.lr = lr
+        oracle.set_oracle_sample_size(n1=n1, n2=n2)
 
     @abstractmethod
     def run(self,

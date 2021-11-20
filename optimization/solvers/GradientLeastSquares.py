@@ -19,11 +19,11 @@ from sklearn import datasets, linear_model
 
 class GradientLeastSquares(Solver):
 
-    def __init__(self, oracle,  lr=0.001, l=1, j1=100, j2=100, alpha= 0.1):
+    def __init__(self, oracle, lr=0.001, l=1, j1=100, j2=100, alpha=0.1, max_iter=10000):
         self.j1 = j1
         self.j2 = j2
         self.alpha = alpha
-        super().__init__(oracle, None, l, None, None, lr)
+        super().__init__(oracle, None, l, max_iter, None, lr, 1, 0)
 
     def get_x_js(self, x_t):
         """
@@ -39,30 +39,37 @@ class GradientLeastSquares(Solver):
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
         objective_value_list = []
-        x_js = self.get_x_js(x_t)
-        A = self.alpha / self.j1 * np.matmul((x_js - x_t).T, (x_js - x_t)) + (1 - self.alpha) * np.identity(
-            x_t.shape[0])
+        for i in range(self.max_iter):
 
-        # compute lipschitz part of the right hand side of the equation Ad=c
-        lips_sum = 0
-        for j in range(self.j1):
-            self.oracle.update_sample()
-            objective_value_x_j, _, _, _ = self.oracle.compute_oracle(x_js[j], )
-            objective_value_x_t, _, _, _ = self.oracle.compute_oracle(x_t, )
-            lips_sum += objective_value_x_j - objective_value_x_t - self.l * np.linalg.norm(x_js[j] - x_t, ord=2) ** 2
-        b = self.alpha / self.j1 * lips_sum
+            x_js = self.get_x_js(x_t)
+            A = self.alpha / self.j1 * np.matmul((x_js - x_t).T, (x_js - x_t)) + (1 - self.alpha) * np.identity(
+                x_t.shape[0])
 
-        # compute mean of gradient estimate of the right hand side of the equation Ad=c
-        gradient_sum = np.zeros(x_t.shape)
-        for j in range(self.j2):
-            self.oracle.update_sample()
-            _, g_t, _, _ = self.oracle.compute_oracle(x_t, )
-            gradient_sum += g_t
-        b += (1 - self.alpha) / self.j2 * gradient_sum
-        # Create linear regression object
-        regr = linear_model.LinearRegression()
+            # compute lipschitz part of the right hand side of the equation Ad=c
+            lips_sum = 0
+            for j in range(self.j1):
+                self.oracle.update_sample()
+                objective_value_x_j, _, _, _ = self.oracle.compute_oracle(x_js[j], )
+                objective_value_x_t, _, _, _ = self.oracle.compute_oracle(x_t, )
+                objective_value_list.append(objective_value_x_t)
+                lips_sum += objective_value_x_j - objective_value_x_t - self.l * np.linalg.norm(x_js[j] - x_t,
+                                                                                                ord=2) ** 2
+            b = self.alpha / self.j1 * lips_sum
 
-        # Train the model using the training sets
-        regr.fit(A, b)
-        regr.
-        return np.linalg.lstsq(A, b,)[0], None
+            # compute mean of gradient estimate of the right hand side of the equation Ad=c
+            gradient_sum = np.zeros(x_t.shape)
+            for j in range(self.j2):
+                self.oracle.update_sample()
+                objective_value_x_t, g_t, _, _ = self.oracle.compute_oracle(x_t, )
+                objective_value_list += [objective_value_x_t] * self.n1
+                gradient_sum += g_t
+            b += (1 - self.alpha) / self.j2 * gradient_sum
+            # Create linear regression object
+            # regr = linear_model.LinearRegression()
+
+            # Train the model using the training sets
+            # regr.fit(A, b)
+            delta = np.linalg.lstsq(A, b, rcond=None)[0]
+            x_t = x_t - self.lr * delta
+
+        return x_t, objective_value_list

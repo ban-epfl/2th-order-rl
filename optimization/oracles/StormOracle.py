@@ -19,16 +19,16 @@ from optimization.utils.StochasticOracle import StochasticOracle
 
 class StormOracle(StochasticOracle):
 
-    def __init__(self, objective_function: ObjectiveFunction, n1=1, k=0.1, w=0.1, c_factor=0.01, ):
+    def __init__(self, objective_function: ObjectiveFunction, k=0.1, w=0.1, c_factor=0.01, ):
         self.k = k
         self.w = w
         self.c_factor = c_factor
-        self.grads=[]
-        self.sqr_grads_norms=0
-        self.d=None
-        self.eta=k/(w**(1/3))
+        self.grads = []
+        self.sqr_grads_norms = 0
+        self.d = None
+        self.eta = k / (w ** (1 / 3))
 
-        super().__init__(objective_function, n1, 0)
+        super().__init__(objective_function, 0)
 
     def compute_oracle(self, x_t, **kwargs):
         objective_value = self.objective_function.forward(x_t, self.s1).mean(axis=0)

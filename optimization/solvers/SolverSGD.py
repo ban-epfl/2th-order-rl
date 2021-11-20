@@ -18,8 +18,8 @@ from optimization.utils.Solver import Solver
 
 class SolverSGD(Solver):
 
-    def __init__(self, oracle, max_iter=1000, lr=0.001):
-        super().__init__(oracle, None, None, max_iter, None, lr)
+    def __init__(self, oracle, max_iter=1000, lr=0.001, n1=1, ):
+        super().__init__(oracle, None, None, max_iter, None, lr, n1, 0)
 
     def run(self, x_t, **kwargs):
         print("SolverSGD optimizing... ")
