@@ -16,11 +16,9 @@ class SolverStorm(Solver):
 
     def run(self, x_t, **kwargs):
         print("SolverStorm optimizing... ")
-        objective_value_list = []
         for i in range(self.max_iter):
-            self.oracle.update_sample()
+            self.oracle.update_sample(x_t)
             objective_value, g_t, _, eta = self.oracle.compute_oracle(x_t, )
-            objective_value_list.append(objective_value)
             x_t = x_t - eta * g_t
 
-        return x_t, np.array(objective_value_list)
+        return x_t

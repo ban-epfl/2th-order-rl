@@ -38,7 +38,6 @@ class GradientLeastSquares(Solver):
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
-        objective_value_list = []
         for i in range(self.max_iter):
 
             x_js = self.get_x_js(x_t)
@@ -48,10 +47,9 @@ class GradientLeastSquares(Solver):
             # compute lipschitz part of the right hand side of the equation Ad=c
             lips_sum = 0
             for j in range(self.j1):
-                self.oracle.update_sample()
+                self.oracle.update_sample(x_t)
                 objective_value_x_j, _, _, _ = self.oracle.compute_oracle(x_js[j], )
                 objective_value_x_t, _, _, _ = self.oracle.compute_oracle(x_t, )
-                objective_value_list.append(objective_value_x_t)
                 lips_sum += objective_value_x_j - objective_value_x_t - self.l * np.linalg.norm(x_js[j] - x_t,
                                                                                                 ord=2) ** 2
             b = self.alpha / self.j1 * lips_sum
@@ -59,9 +57,8 @@ class GradientLeastSquares(Solver):
             # compute mean of gradient estimate of the right hand side of the equation Ad=c
             gradient_sum = np.zeros(x_t.shape)
             for j in range(self.j2):
-                self.oracle.update_sample()
+                self.oracle.update_sample(x_t)
                 objective_value_x_t, g_t, _, _ = self.oracle.compute_oracle(x_t, )
-                objective_value_list += [objective_value_x_t] * self.n1
                 gradient_sum += g_t
             b += (1 - self.alpha) / self.j2 * gradient_sum
             # Create linear regression object
@@ -72,4 +69,4 @@ class GradientLeastSquares(Solver):
             delta = np.linalg.lstsq(A, b, rcond=None)[0]
             x_t = x_t - self.lr * delta
 
-        return x_t, objective_value_list
+        return x_t

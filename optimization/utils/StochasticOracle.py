@@ -28,6 +28,7 @@ class StochasticOracle(ABC):
         self.s2 = None
         self.n1 = None
         self.n2 = None
+        self.objective_values = []
 
     def set_oracle_sample_size(self,
                                n1: int,
@@ -52,7 +53,9 @@ class StochasticOracle(ABC):
         """
         pass
 
-    def update_sample(self, ):
+    def update_sample(self,
+                      x_t: np.ndarray,
+                      ):
         """
         update the samples in Oracle class ( self.s1 and self.s2 )
 
@@ -63,3 +66,5 @@ class StochasticOracle(ABC):
             raise ValueError('Please set oracle sample size n1 and n2!')
 
         self.s1, self.s2 = self.objective_function.get_samples(self.n1, self.n2)
+        tem_s1, _ = self.objective_function.get_samples(1000, 0)
+        self.objective_values += [self.objective_function.forward(x_t, tem_s1).mean(axis=0)] * self.n1
