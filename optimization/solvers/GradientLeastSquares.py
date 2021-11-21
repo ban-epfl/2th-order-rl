@@ -25,6 +25,23 @@ class GradientLeastSquares(Solver):
         self.alpha = alpha
         super().__init__(oracle, None, l, max_iter, None, lr, 1, 0)
 
+    def compute_cost(self, X, y, theta):
+        m = len(y)
+        h = np.matmul(X, theta)
+        return 1 / (2 * m) * np.linalg.norm(h - y, ord=2) ** 2
+
+    def least_squares_SGD(self, c, A, theta, num_iters, gamma, ):
+        m = c.shape[0]
+        models = []
+        for iter in range(num_iters):
+            random_idx = np.random.randint(m)
+            # update weights
+            theta = theta - gamma * np.transpose(A[random_idx]) * (np.matmul(A[random_idx], theta) - c[random_idx])
+            models.append(np.copy(theta))
+            # best_model_idx = np.argmin(val_loss)
+        return models[-1]
+
+
     def get_x_js(self, x_t):
         """
         Args:
@@ -34,7 +51,7 @@ class GradientLeastSquares(Solver):
          a matrix with the shape of (self.j1, x_t.shape[0]) OR (self.j1, param_num)
 
         """
-        return x_t + np.random.rand(self.j1, x_t.shape[0])
+        return x_t + 0.1*(np.random.rand(self.j1, x_t.shape[0])-0.5)
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
