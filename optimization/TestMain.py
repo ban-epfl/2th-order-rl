@@ -41,22 +41,42 @@ def plot_objectiveValue_log(objective_values, plot_name):
         plt.savefig("plots/" + plot_name)
 
 
-def plot_grad_log(grads, true_grads, plot_name):
+def plot_grad_log(grad_norm, plot_name):
     if not cumulative:
         plt.clf()
     else:
         plot_names.append(plot_name)
 
+    plt.plot(range(len(grad_norm)),
+             grad_norm)
+
+    plt.ylim([0, high_bound_y])
+    plt.xlabel('iteration')
+    plt.ylabel('Norm')
+
+    plt.legend(["grad_norm",], loc='upper right')
+    if not cumulative:
+        plt.savefig("plots/" + plot_name)
+
+
+def plot_grad_log_tt(estimated_grads,grads, plot_name):
+    if not cumulative:
+        plt.clf()
+    else:
+        plot_names.append(plot_name)
+
+    plt.plot(range(len(estimated_grads)),
+             estimated_grads)
     plt.plot(range(len(grads)),
              grads)
 
-    plt.plot(range(len(true_grads)),
-             true_grads)
 
-    plt.xlabel('grad ')
-    plt.ylabel('objective value')
 
-    plt.legend(["estimated_grad","true_grad"], loc='upper right')
+
+    plt.xlabel('iteration')
+    plt.ylabel('gradiant')
+
+    plt.legend(["estimated_grad","true_grad",], loc='upper right')
     if not cumulative:
         plt.savefig("plots/" + plot_name)
 
@@ -134,13 +154,14 @@ def test_07():
     print("running test 7...")
 
     oracle = MeanOracle(objective_function=OneDimQuad(), )
-    ms = GradientLeastSquares(oracle=oracle, j1=10000, j2=1, l=1, alpha=0.99, max_iter=4000, lr=1e-3 )
+    ms = GradientLeastSquares(oracle=oracle, j1=1, j2=1, l=1, alpha=0.99, max_iter=4000, lr=1e-3 )
     thetas, estimated_grads, true_grads = ms.run(np.random.RandomState(seed=45).rand(1))
-    objective_values = oracle.objective_values
 
     # plot the objective value list
     plot_objectiveValue_log(oracle.objective_values, "OneDimQuad_GradientLeastSquares")
-    plot_grad_log(estimated_grads, true_grads, "oneDimQuad_GradientLeastSquaresVar" )
+    plot_grad_log(oracle.estimated_norm_gradients, "normOneDimQuad_GradientLeastSquares" )
+
+    # plot_grad_log_tt(estimated_grads, true_grads, "gradOneDimQuad_GradientLeastSquares" )
     print("best parameters", thetas, '\n')
 
 
@@ -148,7 +169,7 @@ cumulative = False
 high_bound_x = 5000
 high_bound_y = 3
 low_bound_x = -1
-low_bound_y = 0.5
+low_bound_y = 0
 
 # test_01()
 # test_03()

@@ -6,6 +6,10 @@ from abc import ABC, abstractmethod
 
 class ObjectiveFunction(ABC):
 
+    def __init__(self):
+        self.log_s1=None
+        self.log_s2=None
+
     @abstractmethod
     def forward(self,
                 x: np.ndarray,
@@ -42,6 +46,36 @@ class ObjectiveFunction(ABC):
                        ) -> int:
         pass
 
+    @abstractmethod
+    def get_samples(self,
+                    n1: int,
+                    n2: int) -> Tuple[np.ndarray, np.ndarray]:
+        """
+            get batch samples
+            Args:
+                n1: batch size for gradient
+                n2: batch size for hessian
+
+            Returns:
+                Tuple[np.ndarray, np.ndarray]
+        """
+        pass
+
+    @abstractmethod
+    def get_log_samples(self,
+                        n1: int,
+                        n2: int) -> Tuple[np.ndarray, np.ndarray]:
+        """
+            get batch samples
+            Args:
+                n1: batch size for gradient
+                n2: batch size for hessian
+
+            Returns:
+                Tuple[np.ndarray, np.ndarray]
+        """
+        pass
+
     def hessian_vector(self, x_t, v, z, r):
         """
         compute f"(x).d ~ (f'(x+r.v)-f'(x-r.v))/(2*r)
@@ -56,35 +90,3 @@ class ObjectiveFunction(ABC):
         """
         return (self.gradient(x_t + r * v, z) -
                 self.gradient(x_t - r * v, z)) / (2 * r)
-
-    def get_samples(self,
-                    n1: int,
-                    n2: int) -> Tuple[np.ndarray, np.ndarray]:
-        """
-            get batch samples
-            Args:
-                n1: batch size for gradient
-                n2: batch size for hessian
-
-            Returns:
-                Tuple[np.ndarray, np.ndarray]
-        """
-        s1 = np.random.normal(1, 0.1, (n1, self.get_sample_dim()))
-        s2 = np.random.normal(1, 0.1, (n2, self.get_sample_dim()))
-        return s1, s2
-
-    def get_log_samples(self,
-                    n1: int,
-                    n2: int) -> Tuple[np.ndarray, np.ndarray]:
-        """
-            get batch samples
-            Args:
-                n1: batch size for gradient
-                n2: batch size for hessian
-
-            Returns:
-                Tuple[np.ndarray, np.ndarray]
-        """
-        s1 = np.random.RandomState(seed=34).normal(1, 2, (n1, self.get_sample_dim()))
-        s2 = np.random.RandomState(seed=34).normal(1, 2, (n2, self.get_sample_dim()))
-        return s1, s2

@@ -41,7 +41,6 @@ class GradientLeastSquares(Solver):
             # best_model_idx = np.argmin(val_loss)
         return models[-1]
 
-
     def get_x_js(self, x_t):
         """
         Args:
@@ -51,12 +50,12 @@ class GradientLeastSquares(Solver):
          a matrix with the shape of (self.j1, x_t.shape[0]) OR (self.j1, param_num)
 
         """
-        return x_t + 0.01*(np.random.normal(0, 0.01,(self.j1, x_t.shape[0])))
+        return x_t +  np.random.normal(0, 0.01, (self.j1, x_t.shape[0]))
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
-        grads=[]
-        true_grad=[]
+        grads = []
+        true_grad = []
         for i in range(self.max_iter):
 
             x_js = self.get_x_js(x_t)
@@ -69,8 +68,10 @@ class GradientLeastSquares(Solver):
                 self.oracle.update_sample(x_t)
                 objective_value_x_j, _, _, _ = self.oracle.compute_oracle(x_js[j], )
                 objective_value_x_t, _, _, _ = self.oracle.compute_oracle(x_t, )
-                lips_sum += (objective_value_x_j - objective_value_x_t - self.l /2 * np.linalg.norm(x_js[j] - x_t,ord=2) ** 2 )*(x_js[j]-x_t)
-            b= (self.alpha / self.j1)*lips_sum
+                lips_sum += (objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,
+                                                                                                     ord=2) ** 2) * (
+                                    x_js[j] - x_t)
+            b = (self.alpha / self.j1) * lips_sum
 
             # compute mean of gradient estimate of the right hand side of the equation Ad=c
             gradient_sum = np.zeros(x_t.shape)
@@ -85,8 +86,8 @@ class GradientLeastSquares(Solver):
             # Train the model using the training sets
             # regr.fit(A, b)
             delta = np.linalg.lstsq(A, b, rcond=None)[0]
-            grads.append(delta[0])
-            true_grad.append(2*x_t[0]+1)
+            grads.append(np.abs(delta[0]))
+            true_grad.append(2 * x_t[0] + 1)
 
             x_t = x_t - self.lr * delta
         return x_t, grads, true_grad

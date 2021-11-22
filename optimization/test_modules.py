@@ -86,6 +86,22 @@ class OneDimQuad(ObjectiveFunction):
     # def hessian_vector(self, x_t, v, z, r):
     #     return np.matmul(np.expand_dims(2 * z[:, 0], axis=1), np.expand_dims(v, axis=1))
 
+    def get_samples(self,
+                    n1: int,
+                    n2: int):
+
+        s1 = np.random.normal(1, 0.1, (n1, self.get_sample_dim()))
+        s2 = np.random.normal(1, 0.1, (n2, self.get_sample_dim()))
+        return s1, s2
+
+    def get_log_samples(self,
+                        n1: int,
+                        n2: int):
+
+        self.log_s1 = np.random.RandomState(seed=56).normal(1, 2, (n1, self.get_sample_dim()))
+        self.log_s2 = np.random.RandomState(seed=56).normal(1, 2, (n2, self.get_sample_dim()))
+        return self.log_s1, self.log_s2
+
 
 class ThreeDimQuad(ObjectiveFunction):
 
