@@ -102,6 +102,9 @@ class OneDimQuad(ObjectiveFunction):
         self.log_s2 = np.random.RandomState(seed=56).normal(1, 2, (n2, self.get_sample_dim()))
         return self.log_s1, self.log_s2
 
+    def true_gradient(self, x):
+        return  2*x[0] + 1
+
 
 class ThreeDimQuad(ObjectiveFunction):
 

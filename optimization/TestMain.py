@@ -23,7 +23,7 @@ from optimization.solvers.SubProblemCubicNewton import SubProblemCubicNewton
 plot_names = []
 
 
-def plot_objectiveValue_log(objective_values, plot_name):
+def plot_objective_value(objective_values, plot_name):
     if not cumulative:
         plt.clf()
     else:
@@ -41,20 +41,18 @@ def plot_objectiveValue_log(objective_values, plot_name):
         plt.savefig("plots/" + plot_name)
 
 
-def plot_grad_log(grad_norm, plot_name):
+def plot_log(values, y_label, plot_name):
     if not cumulative:
         plt.clf()
     else:
         plot_names.append(plot_name)
 
-    plt.plot(range(len(grad_norm)),
-             grad_norm)
-
+    plt.plot(range(len(values)),
+             values)
     plt.ylim([0, high_bound_y])
     plt.xlabel('iteration')
-    plt.ylabel('Norm')
-
-    plt.legend(["grad_norm",], loc='upper right')
+    plt.ylabel(y_label)
+    plt.legend([plot_name,], loc='upper right')
     if not cumulative:
         plt.savefig("plots/" + plot_name)
 
@@ -90,7 +88,7 @@ def test_01():
                                     max_iter=2000, ro=0.1, l=2, epsilon=1e-4, n1=500, n2=500)
     thetas = ms.run(np.random.RandomState(seed=42).rand(1))
     # plot the objective value list
-    plot_objectiveValue_log(oracle.objective_values, "OneDimQuad_SolverCubicNewtonMiniBatch")
+    plot_objective_value(oracle.objective_values, "OneDimQuad_SolverCubicNewtonMiniBatch")
     print("best parameters", thetas, '\n')
 
 
@@ -109,18 +107,22 @@ def test_02():
 def test_03():
     print("running test 3...")
     oracle = MeanOracle(objective_function=OneDimQuad(), )
-    ms = SolverSGD(oracle=oracle, max_iter=100000, n1=1)
+    ms = SolverSGD(oracle=oracle, max_iter=4000, n1=1)
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
-    plot_objectiveValue_log(oracle.objective_values, "OneDimQuad_SolverSGD")
+    # plot_objective_value(oracle.objective_values, "OneDimQuad_SolverSGD")
+    # plot_log(oracle.norm_of_gradients, "gradient norm", "normOfGradOneDimQuad_SolverSGD")
+    plot_log(oracle.norm_of_grad_diff, "grads diff norm", "normOfDiffOneDimQuad_SolverSGD")
     print("best parameters", thetas, '\n')
 
 
 def test_04():
     print("running test 4...")
-    oracle = StormOracle(objective_function=OneDimQuad(), k=1e-1, c_factor=100, )
-    ms = SolverStorm(oracle=oracle, max_iter=100000, )
+    oracle = StormOracle(objective_function=OneDimQuad(), k=0.05, c_factor=100, )
+    ms = SolverStorm(oracle=oracle, max_iter=4000, )
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
-    plot_objectiveValue_log(oracle.objective_values, "OneDimQuad_SolverStorm")
+    # plot_objective_value(oracle.objective_values, "OneDimQuad_SolverStorm")
+    # plot_log(oracle.norm_of_gradients, "gradient norm", "normOfGradOneDimQuad_SolverStorm")
+    plot_log(oracle.norm_of_grad_diff, "grads diff norm", "normOfDiffOneDimQuad_SolverStorm")
     print("best parameters", thetas, '\n')
 
 
@@ -132,7 +134,7 @@ def test_05():
     ms = SolverCubicNewtonMiniBatch(sub_solver=gd_solver, oracle=oracle,
                                     max_iter=60000, ro=1, l=100, epsilon=1e-4, n1=100, n2=100)
     thetas = ms.run(np.random.RandomState(seed=45).rand(2))
-    plot_objectiveValue_log(oracle.objective_values, "WLooking_SolverCubicNewtonMiniBatch")
+    plot_objective_value(oracle.objective_values, "WLooking_SolverCubicNewtonMiniBatch")
     print("best parameters", thetas, '\n')
 
 
@@ -145,7 +147,7 @@ def test_06():
     objective_values = oracle.objective_values
 
     # plot the objective value list
-    plot_objectiveValue_log(oracle.objective_values, "WLooking_SolverSGD")
+    plot_objective_value(oracle.objective_values, "WLooking_SolverSGD")
     plt.savefig("plots/WLooking_SolverSGD")
     print("best parameters", thetas, '\n')
 
@@ -154,30 +156,31 @@ def test_07():
     print("running test 7...")
 
     oracle = MeanOracle(objective_function=OneDimQuad(), )
-    ms = GradientLeastSquares(oracle=oracle, j1=1, j2=1, l=1, alpha=0.99, max_iter=4000, lr=1e-3 )
-    thetas, estimated_grads, true_grads = ms.run(np.random.RandomState(seed=45).rand(1))
+    ms = GradientLeastSquares(oracle=oracle, j1=1, j2=1, l=1, alpha=0.7, max_iter=4000, lr=1e-3 )
+    thetas = ms.run(np.random.RandomState(seed=45).rand(1))
 
     # plot the objective value list
-    plot_objectiveValue_log(oracle.objective_values, "OneDimQuad_GradientLeastSquares")
-    plot_grad_log(oracle.estimated_norm_gradients, "normOneDimQuad_GradientLeastSquares" )
+    # plot_objective_value(oracle.objective_values, "OneDimQuad_GradientLeastSquares")
+    # plot_log(oracle.norm_of_gradients, "gradient norm", "normOfGradOneDimQuad_GradientLeastSquares")
+    plot_log(oracle.norm_of_grad_diff, "grads diff norm", "normOfDiffOneDimQuad_GradientLeastSquares")
 
     # plot_grad_log_tt(estimated_grads, true_grads, "gradOneDimQuad_GradientLeastSquares" )
     print("best parameters", thetas, '\n')
 
 
-cumulative = False
-high_bound_x = 5000
+cumulative = True
+high_bound_x = 3000
 high_bound_y = 3
 low_bound_x = -1
 low_bound_y = 0
 
 # test_01()
-# test_03()
-# test_04()
+test_03()
+test_04()
 # test_05()
 # test_06()
 test_07()
 
 if cumulative:
     plt.legend(plot_names, loc='upper right')
-    plt.savefig("plots/" + '-'.join(plot_names))
+    plt.savefig("plots/" + 'final_values')

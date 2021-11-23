@@ -29,7 +29,9 @@ class StochasticOracle(ABC):
         self.n1 = None
         self.n2 = None
         self.objective_values = []
-        self.estimated_norm_gradients = []
+        self.norm_of_gradients = []
+        self.norm_of_grad_diff = []
+
 
     def set_oracle_sample_size(self,
                                n1: int,
@@ -67,6 +69,10 @@ class StochasticOracle(ABC):
             raise ValueError('Please set oracle sample size n1 and n2!')
 
         self.s1, self.s2 = self.objective_function.get_samples(self.n1, self.n2)
-        tem_s1, _ = self.objective_function.get_log_samples(100, 0)
-        self.estimated_norm_gradients += [np.linalg.norm(self.objective_function.gradient(x_t, tem_s1).mean(axis=0), ord=2)] * (self.n1+self.n2)
+        tem_s1, _ = self.objective_function.get_log_samples(50, 0)
         self.objective_values += [self.objective_function.forward(x_t, tem_s1).mean(axis=0)] * (self.n1+self.n2)
+        # self.estimated_norm_gradients += [np.linalg.norm(self.objective_function.gradient(x_t, tem_s1).mean(axis=0), ord=2)] * (self.n1+self.n2)
+
+    def log_gradient(self, x_t, delta):
+        self.norm_of_gradients.append(np.linalg.norm(delta, ord=2))
+        self.norm_of_grad_diff.append(np.linalg.norm(delta-self.objective_function.true_gradient(x_t), ord=2))

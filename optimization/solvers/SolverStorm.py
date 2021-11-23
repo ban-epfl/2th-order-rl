@@ -19,6 +19,7 @@ class SolverStorm(Solver):
         for i in range(self.max_iter):
             self.oracle.update_sample(x_t)
             objective_value, g_t, _, eta = self.oracle.compute_oracle(x_t, )
+            self.oracle.log_gradient(x_t,g_t)
             x_t = x_t - eta * g_t
 
         return x_t

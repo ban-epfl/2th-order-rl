@@ -54,8 +54,6 @@ class GradientLeastSquares(Solver):
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
-        grads = []
-        true_grad = []
         for i in range(self.max_iter):
 
             x_js = self.get_x_js(x_t)
@@ -86,8 +84,7 @@ class GradientLeastSquares(Solver):
             # Train the model using the training sets
             # regr.fit(A, b)
             delta = np.linalg.lstsq(A, b, rcond=None)[0]
-            grads.append(np.abs(delta[0]))
-            true_grad.append(2 * x_t[0] + 1)
+            self.oracle.log_gradient(x_t,delta)
 
             x_t = x_t - self.lr * delta
-        return x_t, grads, true_grad
+        return x_t

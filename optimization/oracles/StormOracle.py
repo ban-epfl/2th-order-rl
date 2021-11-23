@@ -27,12 +27,17 @@ class StormOracle(StochasticOracle):
         self.sqr_grads_norms = 0
         self.d = None
         self.eta = k / (w ** (1 / 3))
+        self.x_t_1=None
+
 
         super().__init__(objective_function, 0)
 
     def compute_oracle(self, x_t, **kwargs):
         objective_value = self.objective_function.forward(x_t, self.s1).mean(axis=0)
         gradient = self.objective_function.gradient(x_t, self.s1).mean(axis=0).reshape(-1)
+        if self.x_t_1 is not None:
+            last_point_gradient = self.objective_function.gradient(self.x_t_1, self.s1).mean(axis=0).reshape(-1)
+        self.x_t_1=x_t
 
         # Storing all gradients in a list
         self.grads.append(gradient)
@@ -44,7 +49,7 @@ class StormOracle(StochasticOracle):
         if self.d is None:
             # Updating learning rate('η' in paper)
             power = 1.0 / 3.0
-            scaling = np.power((0.1 + self.sqr_grads_norms), power)
+            scaling = np.power((self.w + self.sqr_grads_norms), power)
             self.eta = self.k / (float)(scaling)
             # Storing the momentum term
             self.d = self.grads[-1]
@@ -56,6 +61,6 @@ class StormOracle(StochasticOracle):
             scaling = np.power((0.1 + self.sqr_grads_norms), power)
             self.eta = self.k / (float)(scaling)
             # Storing the momentum term(d'=∇f(x',ε')+(1-a')(d-∇f(x,ε')))
-            self.d = self.grads[-1] + (1 - a) * (self.d - self.grads[-2])
+            self.d = self.grads[-1] + (1 - a) * (self.d - last_point_gradient)
 
         return objective_value, self.d, None, self.eta
