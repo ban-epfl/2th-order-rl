@@ -14,6 +14,8 @@
 
 import numpy as np
 from optimization.utils.Solver import Solver
+
+
 # from sklearn import datasets, linear_model
 
 
@@ -23,6 +25,7 @@ class GradientLeastSquares(Solver):
         self.j1 = j1
         self.j2 = j2
         self.alpha = alpha
+        self.x_js = []
         super().__init__(oracle, None, l, max_iter, None, lr, 1, 0)
 
     def compute_cost(self, X, y, theta):
@@ -50,24 +53,27 @@ class GradientLeastSquares(Solver):
          a matrix with the shape of (self.j1, x_t.shape[0]) OR (self.j1, param_num)
 
         """
-        return x_t +  np.random.normal(0, 0.001, (self.j1, x_t.shape[0]))
+        return x_t + np.random.normal(0, 0.01, (self.j1, x_t.shape[0]))
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
+        self.x_js.append(x_t)
         for i in range(self.max_iter):
 
-            x_js = self.get_x_js(x_t)
-
+            # x_js = self.get_x_js(x_t)
+            x_js = np.array(self.x_js)
+            if i > 0: self.x_js.append(x_t)
             # compute lipschitz part of the right hand side of the equation Ad=c
             lips_sum = 0
-            for j in range(self.j1):
+            for j in range(x_js.shape[0]):
                 self.oracle.update_sample(x_t)
                 objective_value_x_j, _, _, _ = self.oracle.compute_oracle(x_js[j], )
                 objective_value_x_t, _, _, _ = self.oracle.compute_oracle(x_t, )
-                lips_sum += (objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,
-                                                                                                     ord=2) ** 2) * (
+                lips_sum += (self.alpha / x_js.shape[0]) * (
+                            objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,
+                                                                                                    ord=2) ** 2) * (
                                     x_js[j] - x_t)
-            b = (self.alpha / self.j1) * lips_sum
+            b = lips_sum
 
             # compute mean of gradient estimate of the right hand side of the equation Ad=c
             gradient_sum = np.zeros(x_t.shape)
@@ -76,7 +82,7 @@ class GradientLeastSquares(Solver):
                 objective_value_x_t, g_t, _, _ = self.oracle.compute_oracle(x_t, )
                 gradient_sum += g_t
             b += (1 - self.alpha) / self.j2 * gradient_sum
-            A = self.alpha / self.j1 * np.matmul((x_js - x_t).T, (x_js - x_t)) + (1 - self.alpha) * np.identity(
+            A = self.alpha / x_js.shape[0] * np.matmul((x_js - x_t).T, (x_js - x_t)) + (1 - self.alpha) * np.identity(
                 x_t.shape[0])
 
             # x_js_minus= x_js - x_t
@@ -85,14 +91,14 @@ class GradientLeastSquares(Solver):
             #     row= np.zeros(x_t.shape[0])
             #     for k in range(x_t.shape[0]):
             #         if s==k:
-            #             row[k]= self.alpha / self.j1 * np.dot(x_js_minus_transpose[s], x_js_minus[k])+1-self.alpha
+            #             row[k]= self.alpha / x_js.shape[0] * np.dot(x_js_minus_transpose[s], x_js_minus[k])+1-self.alpha
             #         else:
-            #             row[k] = self.alpha / self.j1 * np.dot(x_js_minus_transpose[s], x_js_minus[k])
+            #             row[k] = self.alpha / x_js.shape[0] * np.dot(x_js_minus_transpose[s], x_js_minus[k])
             #
             #     self.least_squares_SGD(b[s], row, None)
 
             delta = np.linalg.lstsq(A, b, rcond=None)[0]
-            self.oracle.log_gradient(x_t,delta)
+            self.oracle.log_gradient(x_t, delta)
 
             x_t = x_t - self.lr * delta
         return x_t
