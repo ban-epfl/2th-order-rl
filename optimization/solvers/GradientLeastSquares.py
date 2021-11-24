@@ -30,13 +30,13 @@ class GradientLeastSquares(Solver):
         h = np.matmul(X, theta)
         return 1 / (2 * m) * np.linalg.norm(h - y, ord=2) ** 2
 
-    def least_squares_SGD(self, c, A, theta, num_iters, gamma, ):
+    def least_squares_SGD(self, c, A, theta, num_iters=100, gamma=0.001, ):
         m = c.shape[0]
         models = []
         for iter in range(num_iters):
             random_idx = np.random.randint(m)
             # update weights
-            theta = theta - gamma * np.transpose(A[random_idx]) * (np.matmul(A[random_idx], theta) - c[random_idx])
+            theta = theta - gamma * np.transpose(A) * (np.matmul(A, theta) - c)
             models.append(np.copy(theta))
             # best_model_idx = np.argmin(val_loss)
         return models[-1]
@@ -50,15 +50,13 @@ class GradientLeastSquares(Solver):
          a matrix with the shape of (self.j1, x_t.shape[0]) OR (self.j1, param_num)
 
         """
-        return x_t +  np.random.normal(0, 0.01, (self.j1, x_t.shape[0]))
+        return x_t +  np.random.normal(0, 0.001, (self.j1, x_t.shape[0]))
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
         for i in range(self.max_iter):
 
             x_js = self.get_x_js(x_t)
-            A = self.alpha / self.j1 * np.matmul((x_js - x_t).T, (x_js - x_t)) + (1 - self.alpha) * np.identity(
-                x_t.shape[0])
 
             # compute lipschitz part of the right hand side of the equation Ad=c
             lips_sum = 0
@@ -78,11 +76,21 @@ class GradientLeastSquares(Solver):
                 objective_value_x_t, g_t, _, _ = self.oracle.compute_oracle(x_t, )
                 gradient_sum += g_t
             b += (1 - self.alpha) / self.j2 * gradient_sum
-            # Create linear regression object
-            # regr = linear_model.LinearRegression()
+            A = self.alpha / self.j1 * np.matmul((x_js - x_t).T, (x_js - x_t)) + (1 - self.alpha) * np.identity(
+                x_t.shape[0])
 
-            # Train the model using the training sets
-            # regr.fit(A, b)
+            # x_js_minus= x_js - x_t
+            # x_js_minus_transpose=x_js_minus.T
+            # for s in range(x_t.shape[0]):
+            #     row= np.zeros(x_t.shape[0])
+            #     for k in range(x_t.shape[0]):
+            #         if s==k:
+            #             row[k]= self.alpha / self.j1 * np.dot(x_js_minus_transpose[s], x_js_minus[k])+1-self.alpha
+            #         else:
+            #             row[k] = self.alpha / self.j1 * np.dot(x_js_minus_transpose[s], x_js_minus[k])
+            #
+            #     self.least_squares_SGD(b[s], row, None)
+
             delta = np.linalg.lstsq(A, b, rcond=None)[0]
             self.oracle.log_gradient(x_t,delta)
 
