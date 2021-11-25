@@ -31,7 +31,7 @@ class StochasticOracle(ABC):
         self.objective_values = []
         self.norm_of_gradients = []
         self.norm_of_grad_diff = []
-
+        self.lastObjective_value = None
 
     def set_oracle_sample_size(self,
                                n1: int,
@@ -70,9 +70,15 @@ class StochasticOracle(ABC):
 
         self.s1, self.s2 = self.objective_function.get_samples(self.n1, self.n2)
         tem_s1, _ = self.objective_function.get_log_samples(50, 0)
-        self.objective_values += [self.objective_function.forward(x_t, tem_s1).mean(axis=0)] * (self.n1+self.n2)
-        # self.estimated_norm_gradients += [np.linalg.norm(self.objective_function.gradient(x_t, tem_s1).mean(axis=0), ord=2)] * (self.n1+self.n2)
+        if self.lastObjective_value is None:
+            self.objective_values += [self.objective_function.forward(x_t, tem_s1).mean(axis=0)] * (self.n1 + self.n2)
+        else:
+            self.objective_values += [self.objective_function.forward(x_t, tem_s1).mean(
+                axis=0) - self.lastObjective_value] * (self.n1 + self.n2)
+
+        # self.estimated_norm_gradients += [np.linalg.norm(self.objective_function.gradient(x_t, tem_s1).mean(
+        # axis=0), ord=2)] * (self.n1+self.n2)
 
     def log_gradient(self, x_t, delta):
-        self.norm_of_gradients.append(np.linalg.norm(delta, ord=2))
-        self.norm_of_grad_diff.append(np.linalg.norm(delta-self.objective_function.true_gradient(x_t), ord=2))
+        self.norm_of_gradients.append(np.log(np.linalg.norm(delta, ord=2)))
+        self.norm_of_grad_diff.append(np.linalg.norm(delta - self.objective_function.true_gradient(x_t), ord=2))
