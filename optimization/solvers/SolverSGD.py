@@ -26,6 +26,6 @@ class SolverSGD(Solver):
         for i in range(self.max_iter):
             self.oracle.update_sample(x_t)
             objective_value, g_t, _, _ = self.oracle.compute_oracle(x_t, )
-            self.oracle.log_gradient(x_t,g_t)
+            self.oracle.log_changes(x_t, g_t)
             x_t = x_t - self.lr * g_t
         return x_t

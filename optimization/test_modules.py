@@ -105,6 +105,9 @@ class OneDimQuad(ObjectiveFunction):
     def true_gradient(self, x):
         return  2*x[0] + 1
 
+    def true_value(self, x):
+        return  x[0]**2+x[0] + 1
+
 
 class ThreeDimQuad(ObjectiveFunction):
 
