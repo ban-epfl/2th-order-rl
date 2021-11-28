@@ -90,3 +90,7 @@ class StochasticOracle(ABC):
         self.objective_values.append(self.objective_function.forward(x_t, tem_s1).mean(axis=0))
         self.norm_of_gradients.append(np.log(np.linalg.norm(delta, ord=2)))
         self.norm_of_grad_diff.append(np.linalg.norm(delta - self.objective_function.true_gradient(x_t), ord=2))
+
+    def compute_index_oracle(self, x_t, index):
+        raise ValueError('Not Implemented Error!')
+

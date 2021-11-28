@@ -154,7 +154,7 @@ def test_07():
 
     oracle = LeastSquareOracle(objective_function=OneDimQuad(), )
     ms = GradientLeastSquares(oracle=oracle, j1=1, j2=1, l=5, alpha=0.99, max_iter=1000, lr=0.01,
-                              point_limit=50, use_beta=True )
+                              point_limit=50, use_beta=True, momentum=0.9 )
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
 
     # plot the objective value list
@@ -187,6 +187,6 @@ test_07()
 
 if cumulative:
     fig.set_size_inches(8, 15)
-    fig.suptitle("with_beta/alpha=0.99/pnt_limit=50",ha= 'right')
+    fig.suptitle("with_beta/alpha=0.99/pnt_limit=50/momentum=0.9/lr=0.01",ha= 'right')
     fig.legend(['OneDimQuad_SGD','OneDimQuad_Storm','OneDimQuad_GradientLeastSquare'], loc='upper right')
-    plt.savefig("plots/test/with beta story/" + '1', )
+    plt.savefig("plots/test/" + '0', )

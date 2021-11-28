@@ -24,13 +24,15 @@ from optimization.utils.Solver import Solver
 class GradientLeastSquares(Solver):
 
     def __init__(self, oracle: LeastSquareOracle, lr=0.001, l=1, j1=100, j2=100, alpha=0.1, max_iter=10000,
-                 point_limit=300, use_beta=False):
+                 point_limit=300, use_beta=False, momentum=0.9, markov_eps=1e-4):
         self.j1 = j1
         self.j2 = j2
         self.alpha = alpha
         self.x_js = []
         self.point_limit = point_limit
         self.use_beta = use_beta
+        self.momentum = momentum
+        self.markov_eps = markov_eps
         super().__init__(oracle, None, l, max_iter, None, lr, 1, 0)
 
     def compute_cost(self, X, y, theta):
@@ -62,8 +64,10 @@ class GradientLeastSquares(Solver):
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
+        v_t=np.zeros(x_t.shape)
         for i in range(self.max_iter):
-
+            x_t_original=x_t
+            x_t = x_t - self.momentum*v_t
             # x_js = self.get_x_js(x_t)
             x_js = np.array(self.x_js)
             self.x_js.append(x_t)
@@ -113,5 +117,10 @@ class GradientLeastSquares(Solver):
                 delta=delta[1:]
             else:
                 self.oracle.log_changes(x_t, delta)
-            x_t = x_t - self.lr * delta
+
+            # NAG: Nesterov accelerated gradient
+            v_t = self.momentum*v_t+self.lr*delta
+            x_t = x_t_original - v_t
+
+
         return x_t
