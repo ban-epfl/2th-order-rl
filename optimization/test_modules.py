@@ -108,6 +108,9 @@ class OneDimQuad(ObjectiveFunction):
     def true_value(self, x):
         return  x[0]**2+x[0] + 1
 
+    def true_hessian_vector(self, x_t,):
+        return np.array([2]*x_t.shape[0])
+
 
 class ThreeDimQuad(ObjectiveFunction):
 

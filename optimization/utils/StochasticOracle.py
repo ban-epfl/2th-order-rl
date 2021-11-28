@@ -31,6 +31,7 @@ class StochasticOracle(ABC):
         self.objective_values = []
         self.norm_of_gradients = []
         self.norm_of_grad_diff = []
+        self.norm_of_hessian_vec_diff = []
         self.norm_of_beta_diff = []
         self.lastObjective_value = None
 
@@ -80,13 +81,15 @@ class StochasticOracle(ABC):
         # self.estimated_norm_gradients += [np.linalg.norm(self.objective_function.gradient(x_t, tem_s1).mean(
         # axis=0), ord=2)] * (self.n1+self.n2)
 
-    def log_changes(self, x_t, delta, beta=None):
+    def log_changes(self, x_t, delta, beta=None, hessian_vec=None):
         tem_s1, _ = self.objective_function.get_log_samples(50, 0)
         if beta is not None:
-            # print("*********")
-            # print( self.objective_function.true_value(x_t))
-            # print(beta)
-            self.norm_of_beta_diff.append(np.abs(beta - self.objective_function.true_value(x_t)))
+            self.norm_of_beta_diff.append(
+                np.abs(beta - self.objective_function.true_value(x_t)))
+        if hessian_vec:
+            self.norm_of_hessian_vec_diff.append(
+                np.linalg.norm(hessian_vec - self.objective_function.true_hessian_vector(x_t), ord=2))
+
         self.objective_values.append(self.objective_function.forward(x_t, tem_s1).mean(axis=0))
         self.norm_of_gradients.append(np.log(np.linalg.norm(delta, ord=2)))
         self.norm_of_grad_diff.append(np.linalg.norm(delta - self.objective_function.true_gradient(x_t), ord=2))
@@ -94,3 +97,5 @@ class StochasticOracle(ABC):
     def compute_index_oracle(self, x_t, index):
         raise ValueError('Not Implemented Error!')
 
+    def log_markov_inequality(self, x_t, delta,markov_eps, markov_prob):
+        raise ValueError('Not Implemented Error!')

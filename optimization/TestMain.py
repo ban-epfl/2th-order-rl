@@ -69,6 +69,7 @@ def plot_log(values, y_label, plot_name,axis):
     axis.plot(range(len(values)),
              values)
     axis.set_ylim(y_bounds[y_label])
+    axis.set_xlim(low_bound_x,high_bound_x)
     axis.set_xlabel('iteration')
     axis.set_ylabel(y_label)
     if not cumulative:
@@ -114,7 +115,7 @@ def test_03():
 
 def test_04():
     print("running test 4...")
-    oracle = StormOracle(objective_function=OneDimQuad(), k=0.07, c_factor=300, )
+    oracle = StormOracle(objective_function=OneDimQuad(), k=0.1, c_factor=300, )
     ms = SolverStorm(oracle=oracle, max_iter=1000, )
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
     plot_objective_value(oracle.objective_values, "OneDimQuad_SolverStorm")
@@ -154,7 +155,7 @@ def test_07():
 
     oracle = LeastSquareOracle(objective_function=OneDimQuad(), )
     ms = GradientLeastSquares(oracle=oracle, j1=1, j2=1, l=5, alpha=0.99, max_iter=1000, lr=0.01,
-                              point_limit=50, use_beta=True, momentum=0.9 )
+                              point_limit=20, use_beta=True, momentum=0.7, markov_eps=2, cut_off_eps=1e-3)
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
 
     # plot the objective value list
@@ -162,6 +163,7 @@ def test_07():
     plot_log(oracle.norm_of_gradients, "log of norm (grad)", "normOfGradOneDimQuad_GradientLeastSquares_j1", axis[2])
     plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[3])
     plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[4])
+    # plot_log(oracle.norm_of_hessian_vec_diff, "norm of diff (Hv)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[4])
 
     print("best parameters", thetas, '\n')
 
@@ -174,7 +176,9 @@ y_bounds={"obj value":[0.5, 3],
           "log of rate (obj value)":[-7,7],
           "norm of diff (grads)":[0,1],
           "log of norm (grad)":[-10,2],
-          "norm of diff (beta)":[0,3.1]}
+          "norm of diff (beta)":[0,3.1],
+          "norm of diff (Hv)":[0,3]
+          }
 low_bound_y = 0
 
 # test_01()
@@ -186,7 +190,7 @@ test_07()
 
 
 if cumulative:
-    fig.set_size_inches(8, 15)
-    fig.suptitle("with_beta/alpha=0.99/pnt_limit=50/momentum=0.9/lr=0.01",ha= 'right')
+    fig.set_size_inches(12, 15)
+    fig.suptitle("with_beta/alpha=0.99/pnt_limit=20/momentum=0.7/lr=0.01",ha= 'right')
     fig.legend(['OneDimQuad_SGD','OneDimQuad_Storm','OneDimQuad_GradientLeastSquare'], loc='upper right')
     plt.savefig("plots/test/" + '0', )
