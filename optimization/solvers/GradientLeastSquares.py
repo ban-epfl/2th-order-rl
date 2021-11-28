@@ -94,12 +94,11 @@ class GradientLeastSquares(Solver):
             # if last points are going to increase the limit, cut them out
             if x_js.shape[0] > self.point_limit:
                 x_js = x_js[x_js.shape[0] - self.point_limit:]
-            x_js_minus = x_js - x_t
             b = 0
-            # in case of estimating beta, so we need to increase the dim if x_js
-            if self.use_beta:
-                x_js_minus = np.c_[np.ones(x_js.shape[0]), x_js_minus]
             if i > 0:
+                x_js_minus = x_js - x_t
+                # in case of estimating beta, so we need to increase the dim if x_js
+                if self.use_beta: x_js_minus = np.c_[np.ones(x_js.shape[0]), x_js_minus]
                 A = self.alpha / x_js.shape[0] * np.matmul(x_js_minus.T, x_js_minus) + (1 - self.alpha) * np.identity(
                     x_t.shape[0] + (1 if self.use_beta else 0))
                 # compute lipschitz part of the right hand side of the equation Ad=c
@@ -129,9 +128,10 @@ class GradientLeastSquares(Solver):
             # solve least square problem
             delta = np.linalg.lstsq(A, b, rcond=None)[0]
             # estimate hessian vector
-            hessian_vec = self.estimate_hessian_vector(x_js,
-                                                       x_t,
-                                                       np.random.RandomState(seed=2).rand(x_t.shape[0]))
+            hessian_vec=None
+            # hessian_vec = self.estimate_hessian_vector(x_js,
+            #                                            x_t,
+            #                                            np.random.RandomState(seed=2).rand(x_t.shape[0]))
 
             if self.use_beta:
                 self.oracle.log_changes(x_t, delta[1:], delta[0], hessian_vec=hessian_vec)

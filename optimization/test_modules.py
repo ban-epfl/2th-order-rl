@@ -127,3 +127,51 @@ class ThreeDimQuad(ObjectiveFunction):
 
     def hessian_vector(self, x_t, v, z, r):
         return np.matmul(np.expand_dims(2 * z[:, 0], axis=1), np.expand_dims(v, axis=1))
+
+
+
+
+class FourDimQuad(ObjectiveFunction):
+
+    def get_sample_dim(self) -> int:
+        return 12
+
+    def forward(self, x, z):
+        result=np.zeros(z.shape[0])
+        for i in range(4):
+            result += z[:, i] * x[i] ** 2 + z[:, i+1] * x[i] + z[:, i+2]
+        return result
+
+    def gradient(self, x, z):
+        result = np.expand_dims(2 * z[:, 0] * x[0] + z[:, 1], axis=1)
+        for i in range(1, 4):
+            result = np.c_[result, np.expand_dims(2 * z[:, i] * x[i] + z[:, i+1], axis=1)]
+        return result
+
+    # def hessian_vector(self, x_t, v, z, r):
+    #     return np.matmul(np.expand_dims(2 * z[:, 0], axis=1), np.expand_dims(v, axis=1))
+
+    def get_samples(self,
+                    n1: int,
+                    n2: int):
+
+        s1 = np.random.normal(1, 0.1, (n1, self.get_sample_dim()))
+        s2 = np.random.normal(1, 0.1, (n2, self.get_sample_dim()))
+        return s1, s2
+
+    def get_log_samples(self,
+                        n1: int,
+                        n2: int):
+
+        self.log_s1 = np.random.RandomState(seed=56).normal(1, 2, (n1, self.get_sample_dim()))
+        self.log_s2 = np.random.RandomState(seed=56).normal(1, 2, (n2, self.get_sample_dim()))
+        return self.log_s1, self.log_s2
+
+    def true_gradient(self, x):
+        return  np.array([2*x[i] + 1 for i in range(4)])
+
+    def true_value(self, x):
+        return  sum([x[i]**2+x[i] + 1 for i in range(4)])
+
+    def true_hessian_vector(self, x,):
+        return np.array([2]*x.shape[0])
