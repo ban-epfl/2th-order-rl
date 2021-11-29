@@ -60,7 +60,7 @@ class StochasticOracle(ABC):
 
     def update_sample(self,
                       x_t: np.ndarray,
-                      ):
+                      save= False):
         """
         update the samples in Oracle class ( self.s1 and self.s2 )
 

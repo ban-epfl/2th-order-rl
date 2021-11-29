@@ -28,9 +28,9 @@ class LeastSquareOracle(StochasticOracle):
         return objective_value, g_t, None, None
 
     def update_sample(self,
-                      x_t):
+                      x_t, save=True):
         super(LeastSquareOracle, self).update_sample(x_t)
-        self.generated_samples.append(self.s1)
+        if save: self.generated_samples.append(self.s1)
 
     def compute_index_oracle(self, x_t, index):
         sample = self.generated_samples[index]

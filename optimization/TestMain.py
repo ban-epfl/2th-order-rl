@@ -23,6 +23,8 @@ from optimization.solvers.SolverCubicNewtonMiniBatch import SolverCubicNewtonMin
 from optimization.solvers.SubProblemCubicNewton import SubProblemCubicNewton
 
 plot_names = []
+file_name="0"
+save_path="plots/test-29/"
 
 
 def plot_objective_value(objective_values, plot_name):
@@ -32,7 +34,7 @@ def plot_objective_value(objective_values, plot_name):
         plot_names.append(plot_name)
 
     axis[0].plot(range(len(objective_values)),
-             objective_values)
+                 objective_values)
 
     axis[0].set_xlabel('oracle calls ')
     axis[0].set_ylabel('obj value')
@@ -43,14 +45,14 @@ def plot_objective_value(objective_values, plot_name):
     if not cumulative:
         axis[0].legend([plot_name], loc='upper right')
         axis[0].savefig("plots/" + plot_name)
-
-    objective_values= np.array(objective_values)
-    objective_values= objective_values[1:]-objective_values[:-1]
-    for i in range(len(objective_values)-1,0,-1):
-        objective_values[i]/=objective_values[i-1]
-    objective_values=np.log(np.abs(objective_values[1:]))
+    np.savetxt(save_path+"data/"+plot_name+"_obj_"+file_name+".csv", objective_values, delimiter=",")
+    objective_values = np.array(objective_values)
+    objective_values = objective_values[1:] - objective_values[:-1]
+    for i in range(len(objective_values) - 1, 0, -1):
+        objective_values[i] /= objective_values[i - 1]
+    objective_values = np.log(np.abs(objective_values[1:]))
     axis[1].plot(range(len(objective_values)),
-             objective_values)
+                 objective_values)
 
     axis[1].set_xlabel('oracle calls ')
     axis[1].set_ylabel('log of rate (obj value)')
@@ -60,21 +62,26 @@ def plot_objective_value(objective_values, plot_name):
         axis[1].legend([plot_name], loc='upper right')
         axis[1].savefig("plots/" + plot_name)
 
-def plot_log(values, y_label, plot_name,axis):
+
+def plot_log(values, y_label, plot_name, axis, var=False):
     if not cumulative:
         axis.clf()
     else:
         plot_names.append(plot_name)
 
     axis.plot(range(len(values)),
-             values)
+              values)
     axis.set_ylim(y_bounds[y_label])
-    axis.set_xlim(low_bound_x,high_bound_x)
+    axis.set_xlim(low_bound_x, high_bound_x)
     axis.set_xlabel('iteration')
     axis.set_ylabel(y_label)
+    if "norm of diff (grads)"==y_label:
+        var_labels.append("std "+plot_name+" : "+"{:.4f}".format(np.std(values[600:high_bound_x])))
+
     if not cumulative:
         axis.legend([plot_name, ], loc='upper right')
         axis.savefig("plots/" + plot_name)
+    np.savetxt(save_path+"data/"+plot_name+"_"+y_label+"_"+file_name+".csv", values, delimiter=",")
 
 
 def test_01():
@@ -107,20 +114,20 @@ def test_03():
     ms = SolverSGD(oracle=oracle, max_iter=1000, n1=1, lr=0.01)
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
     plot_objective_value(oracle.objective_values, "OneDimQuad_SolverSGD")
-    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "normOfGradOneDimQuad_SolverSGD", axis[2])
-    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_SolverSGD",axis[3])
+    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "SGD", axis[2])
+    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "SGD", axis[3])
 
     print("best parameters", thetas, '\n')
 
 
 def test_04():
     print("running test 4...")
-    oracle = StormOracle(objective_function=OneDimQuad(), k=0.1, c_factor=300, )
+    oracle = StormOracle(objective_function=OneDimQuad(), k=0.05, c_factor=300, )
     ms = SolverStorm(oracle=oracle, max_iter=1000, )
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
-    plot_objective_value(oracle.objective_values, "OneDimQuad_SolverStorm")
-    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "normOfGradOneDimQuad_SolverStorm", axis[2])
-    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_SolverStorm",axis[3])
+    plot_objective_value(oracle.objective_values, "SolverStorm")
+    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "Storm", axis[2])
+    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "Storm", axis[3])
 
     print("best parameters", thetas, '\n')
 
@@ -154,16 +161,18 @@ def test_07():
     print("running test 7...")
 
     oracle = LeastSquareOracle(objective_function=OneDimQuad(), )
-    ms = GradientLeastSquares(oracle=oracle, j1=1, j2=1, l=5, alpha=0.99, max_iter=1000, lr=0.01,
-                              point_limit=20, use_beta=True, momentum=0.7, markov_eps=2, cut_off_eps=1e-3)
+    ms = GradientLeastSquares(oracle=oracle, j2=1, l=4, alpha=1, max_iter=1000, lr=0.01,
+                              point_limit=100, use_beta=False, momentum=0.5, markov_eps=None, cut_off_eps=None)
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
 
     # plot the objective value list
-    plot_objective_value(oracle.objective_values, "OneDimQuad_GradientLeastSquares_j1")
-    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "normOfGradOneDimQuad_GradientLeastSquares_j1", axis[2])
-    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[3])
-    plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[4])
+    plot_objective_value(oracle.objective_values, "OneDimQuad_GradientLeastSquares")
+    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "GradientLeastSquares", axis[2])
+    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "GradientLeastSquares", axis[3])
+    # plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "GradientLeastSquares", axis[4])
     # plot_log(oracle.norm_of_hessian_vec_diff, "norm of diff (Hv)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[4])
+
+
 
     print("best parameters", thetas, '\n')
 
@@ -175,7 +184,7 @@ def test_08():
     thetas = ms.run(np.random.RandomState(seed=45).rand(4))
     plot_objective_value(oracle.objective_values, "OneDimQuad_SolverSGD")
     plot_log(oracle.norm_of_gradients, "log of norm (grad)", "normOfGradOneDimQuad_SolverSGD", axis[2])
-    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_SolverSGD",axis[3])
+    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_SolverSGD", axis[3])
 
     print("best parameters", thetas, '\n')
 
@@ -185,11 +194,12 @@ def test_09():
     oracle = StormOracle(objective_function=FourDimQuad(), k=0.1, c_factor=300, )
     ms = SolverStorm(oracle=oracle, max_iter=1000, )
     thetas = ms.run(np.random.RandomState(seed=45).rand(4))
-    plot_objective_value(oracle.objective_values, "OneDimQuad_SolverStorm")
-    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "normOfGradOneDimQuad_SolverStorm", axis[2])
-    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_SolverStorm",axis[3])
+    plot_objective_value(oracle.objective_values, "Storm")
+    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "Storm", axis[2])
+    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "Storm", axis[3])
 
     print("best parameters", thetas, '\n')
+
 
 def test_10():
     print("running test 10...")
@@ -200,41 +210,45 @@ def test_10():
     thetas = ms.run(np.random.RandomState(seed=45).rand(4))
 
     # plot the objective value list
-    plot_objective_value(oracle.objective_values, "OneDimQuad_GradientLeastSquares_j1")
-    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "normOfGradOneDimQuad_GradientLeastSquares_j1", axis[2])
-    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[3])
-    plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[4])
-    # plot_log(oracle.norm_of_hessian_vec_diff, "norm of diff (Hv)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[4])
+    plot_objective_value(oracle.objective_values, "GradientLeastSquares")
+    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "GradientLeastSquares", axis[2])
+    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "GradientLeastSquares", axis[3])
+    plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "GradientLeastSquares", axis[4])
+    # plot_log(oracle.norm_of_hessian_vec_diff, "norm of diff (Hv)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",
+    # axis[4])
 
     print("best parameters", thetas, '\n')
 
+
 cumulative = True
-fig, axis = plt.subplots(5)
+fig, axis = plt.subplots(4)
+var_labels=[]
 high_bound_x = 1000
 low_bound_x = -1
 high_bound_y = 3
-y_bounds={"obj value":[0.5, 3],
-          "log of rate (obj value)":[-7,7],
-          "norm of diff (grads)":[0,1],
-          "log of norm (grad)":[-10,2],
-          "norm of diff (beta)":[0,3.1],
-          "norm of diff (Hv)":[0,3]
-          }
+y_bounds = {"obj value": [0.5, 3],
+            "log of rate (obj value)": [-7, 7],
+            "norm of diff (grads)": [0, 1],
+            "log of norm (grad)": [-10, 2],
+            "norm of diff (beta)": [0, 3.1],
+            "norm of diff (Hv)": [0, 6]
+            }
 low_bound_y = 0
 
 # test_01()
-# test_03()
-# test_04()
+test_03()
+test_04()
 # test_05()
 # test_06()
-# test_07()
-test_08()
-test_09()
-test_10()
-
+test_07()
+# test_08()
+# test_09()
+# test_10()
 
 if cumulative:
     fig.set_size_inches(12, 15)
-    fig.suptitle("with_beta/alpha=0.99/pnt_limit=20/momentum=0.7/lr=0.01",ha= 'right')
-    fig.legend(['OneDimQuad_SGD','OneDimQuad_Storm','OneDimQuad_GradientLeastSquare'], loc='upper right')
-    plt.savefig("plots/test/high dim/" + '0', )
+    axis[3].legend(var_labels, loc='upper right')
+    fig.suptitle("without_beta/alpha=1/pnt_limit=100/momentum=0.5/lr=0.01", ha='right')
+    fig.legend(['1DimQuad_SGD','1DimQuad_Storm', '1DimQuad_GradientLeastSquare'], loc='upper right')
+    plt.savefig(save_path+file_name, )
+

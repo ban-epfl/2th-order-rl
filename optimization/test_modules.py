@@ -133,18 +133,22 @@ class ThreeDimQuad(ObjectiveFunction):
 
 class FourDimQuad(ObjectiveFunction):
 
+    def __init__(self):
+        self.dim=4
+        super().__init__()
+
     def get_sample_dim(self) -> int:
-        return 12
+        return self.dim*3
 
     def forward(self, x, z):
         result=np.zeros(z.shape[0])
-        for i in range(4):
+        for i in range(self.dim):
             result += z[:, i] * x[i] ** 2 + z[:, i+1] * x[i] + z[:, i+2]
         return result
 
     def gradient(self, x, z):
         result = np.expand_dims(2 * z[:, 0] * x[0] + z[:, 1], axis=1)
-        for i in range(1, 4):
+        for i in range(1, self.dim):
             result = np.c_[result, np.expand_dims(2 * z[:, i] * x[i] + z[:, i+1], axis=1)]
         return result
 
@@ -168,10 +172,10 @@ class FourDimQuad(ObjectiveFunction):
         return self.log_s1, self.log_s2
 
     def true_gradient(self, x):
-        return  np.array([2*x[i] + 1 for i in range(4)])
+        return  np.array([2*x[i] + 1 for i in range(self.dim)])
 
     def true_value(self, x):
-        return  sum([x[i]**2+x[i] + 1 for i in range(4)])
+        return  sum([x[i]**2+x[i] + 1 for i in range(self.dim)])
 
     def true_hessian_vector(self, x,):
         return np.array([2]*x.shape[0])

@@ -25,7 +25,6 @@ class GradientLeastSquares(Solver):
 
     def __init__(self, oracle: LeastSquareOracle, lr=0.001, l=1, j1=100, j2=100, alpha=0.1, max_iter=10000,
                  point_limit=300, use_beta=False, momentum=0.9, markov_eps=None, cut_off_eps=None):
-        self.j1 = j1
         self.j2 = j2
         self.alpha = alpha
         self.x_js = []
@@ -81,6 +80,9 @@ class GradientLeastSquares(Solver):
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
+        self.x_js.append(x_t + np.random.normal(0, 0.01, x_t.shape))
+        self.oracle.update_sample(x_t, )
+
         markov_counter = 0
         # initiate nestrov momentum velocity
         v_t = np.zeros(x_t.shape)
@@ -95,29 +97,25 @@ class GradientLeastSquares(Solver):
             if x_js.shape[0] > self.point_limit:
                 x_js = x_js[x_js.shape[0] - self.point_limit:]
             b = 0
-            if i > 0:
-                x_js_minus = x_js - x_t
-                # in case of estimating beta, so we need to increase the dim if x_js
-                if self.use_beta: x_js_minus = np.c_[np.ones(x_js.shape[0]), x_js_minus]
-                A = self.alpha / x_js.shape[0] * np.matmul(x_js_minus.T, x_js_minus) + (1 - self.alpha) * np.identity(
-                    x_t.shape[0] + (1 if self.use_beta else 0))
-                # compute lipschitz part of the right hand side of the equation Ad=c
-                for j in range(x_js.shape[0]):
-                    objective_value_x_j, _, _, _ = self.oracle.compute_index_oracle(x_js[j], j)
-                    objective_value_x_t, _, _, _ = self.oracle.compute_index_oracle(x_t, j)
-                    if self.use_beta: objective_value_x_t = 0
-                    b += (self.alpha / x_js.shape[0]) * (
-                            objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,
-                                                                                                    ord=2) ** 2) * \
-                         x_js_minus[j]
+            x_js_minus = x_js - x_t
+            # in case of estimating beta, so we need to increase the dim if x_js
+            if self.use_beta: x_js_minus = np.c_[np.ones(x_js.shape[0]), x_js_minus]
+            A = self.alpha / x_js.shape[0] * np.matmul(x_js_minus.T, x_js_minus) + (1 - self.alpha) * np.identity(
+                x_t.shape[0] + (1 if self.use_beta else 0))
+            # compute lipschitz part of the right hand side of the equation Ad=c
+            for j in range(x_js.shape[0]):
+                objective_value_x_j, _, _, _ = self.oracle.compute_index_oracle(x_js[j],j)
+                objective_value_x_t, _, _, _ = self.oracle.compute_index_oracle(x_t,j)
+                if self.use_beta: objective_value_x_t = 0
+                b += (self.alpha / x_js.shape[0]) * (
+                        objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,ord=2) ** 2) * \
+                     x_js_minus[j]
 
-            else:
-                A = (1 - self.alpha) * np.identity(x_t.shape[0] + (1 if self.use_beta else 0))
 
             # compute mean of gradient estimate of the right hand side of the equation Ad=c
             gradient_sum = np.zeros(x_t.shape)
             for j in range(self.j2):
-                self.oracle.update_sample(x_t)
+                self.oracle.update_sample(x_t, )
                 objective_value_x_t, g_t, _, _ = self.oracle.compute_oracle(x_t, )
                 gradient_sum += g_t
 
@@ -140,10 +138,10 @@ class GradientLeastSquares(Solver):
                 self.oracle.log_changes(x_t, delta, hessian_vec=hessian_vec)
 
             norm_of_delta=np.linalg.norm(delta, ord=2)
-            if norm_of_delta > self.markov_eps:
+            if self.markov_eps and  norm_of_delta > self.markov_eps:
                 markov_counter += 1
 
-            if norm_of_delta < self.cut_off_eps:
+            if self.cut_off_eps and norm_of_delta < self.cut_off_eps:
                 self.oracle.log_markov_inequality(x_t, norm_of_delta, markov_eps=self.markov_eps,
                                                   markov_prob=markov_counter / (i + 1))
                 break
@@ -151,5 +149,6 @@ class GradientLeastSquares(Solver):
             # NAG: Nesterov accelerated gradient
             v_t = self.momentum * v_t + self.lr * delta
             x_t = x_t_original - v_t
+            # self.oracle.update_sample(x_t, )
 
         return x_t
