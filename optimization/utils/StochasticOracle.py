@@ -82,7 +82,7 @@ class StochasticOracle(ABC):
         # axis=0), ord=2)] * (self.n1+self.n2)
 
     def log_changes(self, x_t, delta, beta=None, hessian_vec=None):
-        tem_s1, _ = self.objective_function.get_log_samples(50, 0)
+        tem_s1, _ = self.objective_function.get_log_samples(100, 0)
         if beta is not None:
             self.norm_of_beta_diff.append(
                 np.abs(beta - self.objective_function.true_value(x_t)))

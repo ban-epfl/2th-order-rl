@@ -23,8 +23,8 @@ from optimization.solvers.SolverCubicNewtonMiniBatch import SolverCubicNewtonMin
 from optimization.solvers.SubProblemCubicNewton import SubProblemCubicNewton
 
 plot_names = []
-file_name="0"
-save_path="plots/test-29/"
+file_name = "0"
+save_path = "plots/test-29/limited number story/"
 
 
 def plot_objective_value(objective_values, plot_name):
@@ -45,7 +45,7 @@ def plot_objective_value(objective_values, plot_name):
     if not cumulative:
         axis[0].legend([plot_name], loc='upper right')
         axis[0].savefig("plots/" + plot_name)
-    np.savetxt(save_path+"data/"+plot_name+"_obj_"+file_name+".csv", objective_values, delimiter=",")
+    np.savetxt(save_path + "data/" + plot_name + "_obj_" + file_name + ".csv", objective_values, delimiter=",")
     objective_values = np.array(objective_values)
     objective_values = objective_values[1:] - objective_values[:-1]
     for i in range(len(objective_values) - 1, 0, -1):
@@ -75,13 +75,13 @@ def plot_log(values, y_label, plot_name, axis, var=False):
     axis.set_xlim(low_bound_x, high_bound_x)
     axis.set_xlabel('iteration')
     axis.set_ylabel(y_label)
-    if "norm of diff (grads)"==y_label:
-        var_labels.append("std "+plot_name+" : "+"{:.4f}".format(np.std(values[600:high_bound_x])))
+    if "norm of diff (grads)" == y_label:
+        var_labels.append("std " + plot_name + " : " + "{:.4f}".format(np.std(values[600:high_bound_x])))
 
     if not cumulative:
         axis.legend([plot_name, ], loc='upper right')
         axis.savefig("plots/" + plot_name)
-    np.savetxt(save_path+"data/"+plot_name+"_"+y_label+"_"+file_name+".csv", values, delimiter=",")
+    np.savetxt(save_path + "data/" + plot_name + "_" + y_label + "_" + file_name + ".csv", values, delimiter=",")
 
 
 def test_01():
@@ -122,7 +122,7 @@ def test_03():
 
 def test_04():
     print("running test 4...")
-    oracle = StormOracle(objective_function=OneDimQuad(), k=0.05, c_factor=300, )
+    oracle = StormOracle(objective_function=OneDimQuad(), k=0.05, c_factor=100, )
     ms = SolverStorm(oracle=oracle, max_iter=1000, )
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
     plot_objective_value(oracle.objective_values, "SolverStorm")
@@ -161,18 +161,17 @@ def test_07():
     print("running test 7...")
 
     oracle = LeastSquareOracle(objective_function=OneDimQuad(), )
-    ms = GradientLeastSquares(oracle=oracle, j2=1, l=4, alpha=1, max_iter=1000, lr=0.01,
-                              point_limit=100, use_beta=False, momentum=0.5, markov_eps=None, cut_off_eps=None)
+    ms = GradientLeastSquares(oracle=oracle, j2=1, l=lipschitz, alpha=1, max_iter=1000, lr=lr,
+                              point_limit=pnt_limit, use_beta=False, momentum=momentum, markov_eps=None,
+                              cut_off_eps=None)
     thetas = ms.run(np.random.RandomState(seed=45).rand(1))
 
     # plot the objective value list
     plot_objective_value(oracle.objective_values, "OneDimQuad_GradientLeastSquares")
     plot_log(oracle.norm_of_gradients, "log of norm (grad)", "GradientLeastSquares", axis[2])
     plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "GradientLeastSquares", axis[3])
-    # plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "GradientLeastSquares", axis[4])
-    # plot_log(oracle.norm_of_hessian_vec_diff, "norm of diff (Hv)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[4])
-
-
+    # plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "GradientLeastSquares", axis[4]) plot_log(
+    # oracle.norm_of_hessian_vec_diff, "norm of diff (Hv)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",axis[4])
 
     print("best parameters", thetas, '\n')
 
@@ -222,10 +221,13 @@ def test_10():
 
 cumulative = True
 fig, axis = plt.subplots(4)
-var_labels=[]
+var_labels = []
 high_bound_x = 1000
 low_bound_x = -1
 high_bound_y = 3
+
+
+
 y_bounds = {"obj value": [0.5, 3],
             "log of rate (obj value)": [-7, 7],
             "norm of diff (grads)": [0, 1],
@@ -234,6 +236,15 @@ y_bounds = {"obj value": [0.5, 3],
             "norm of diff (Hv)": [0, 6]
             }
 low_bound_y = 0
+
+
+
+
+pnt_limit = 100
+momentum = 0.2
+lr = 0.01
+lipschitz=2
+
 
 # test_01()
 test_03()
@@ -248,7 +259,7 @@ test_07()
 if cumulative:
     fig.set_size_inches(12, 15)
     axis[3].legend(var_labels, loc='upper right')
-    fig.suptitle("without_beta/alpha=1/pnt_limit=100/momentum=0.5/lr=0.01", ha='right')
-    fig.legend(['1DimQuad_SGD','1DimQuad_Storm', '1DimQuad_GradientLeastSquare'], loc='upper right')
-    plt.savefig(save_path+file_name, )
-
+    fig.suptitle("without_beta/alpha=1/pnt_limit={}/mom={:.2f}/lr={:.4f}/lpchz={}".format(pnt_limit, momentum, lr,lipschitz),
+                 ha='right')
+    fig.legend(['1DimQuad_SGD', '1DimQuad_Storm', '1DimQuad_GradientLeastSquare'], loc='upper right')
+    plt.savefig(save_path + file_name, )

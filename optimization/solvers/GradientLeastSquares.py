@@ -64,10 +64,12 @@ class GradientLeastSquares(Solver):
 
     def estimate_hessian_vector(self, x_js, x_t, v):
         """
-        np.ndarray :param x_js: last point in the method
-        np.ndarray :param x_t: current point we are going to find its gradient
-        np.ndarray :param v:   the vector which is going to compute Hv ( hessian vector )
-        np.ndarray :return:  Hessian vector ( Hv )
+        Args:
+            np.ndarray :param x_js: last point in the method
+            np.ndarray :param x_t: current point we are going to find its gradient
+            np.ndarray :param v:   the vector which is going to compute Hv ( hessian vector )
+        Returns:
+            np.ndarray :return:  Hessian vector ( Hv )
         """
         x_js_minus = x_js - x_t
         x_js_minus = np.c_[np.ones(x_js.shape[0]), x_js_minus]
@@ -80,7 +82,7 @@ class GradientLeastSquares(Solver):
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
-        self.x_js.append(x_t + np.random.normal(0, 0.01, x_t.shape))
+        self.x_js.append(x_t + np.random.normal(0, 0.0001, x_t.shape))
         self.oracle.update_sample(x_t, )
 
         markov_counter = 0
@@ -104,13 +106,13 @@ class GradientLeastSquares(Solver):
                 x_t.shape[0] + (1 if self.use_beta else 0))
             # compute lipschitz part of the right hand side of the equation Ad=c
             for j in range(x_js.shape[0]):
-                objective_value_x_j, _, _, _ = self.oracle.compute_index_oracle(x_js[j],j)
-                objective_value_x_t, _, _, _ = self.oracle.compute_index_oracle(x_t,j)
+                objective_value_x_j, _, _, _ = self.oracle.compute_index_oracle(x_js[j], j)
+                objective_value_x_t, _, _, _ = self.oracle.compute_index_oracle(x_t, j)
                 if self.use_beta: objective_value_x_t = 0
                 b += (self.alpha / x_js.shape[0]) * (
-                        objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,ord=2) ** 2) * \
+                        objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,
+                                                                                                ord=2) ** 2) * \
                      x_js_minus[j]
-
 
             # compute mean of gradient estimate of the right hand side of the equation Ad=c
             gradient_sum = np.zeros(x_t.shape)
@@ -126,7 +128,7 @@ class GradientLeastSquares(Solver):
             # solve least square problem
             delta = np.linalg.lstsq(A, b, rcond=None)[0]
             # estimate hessian vector
-            hessian_vec=None
+            hessian_vec = None
             # hessian_vec = self.estimate_hessian_vector(x_js,
             #                                            x_t,
             #                                            np.random.RandomState(seed=2).rand(x_t.shape[0]))
@@ -137,8 +139,8 @@ class GradientLeastSquares(Solver):
             else:
                 self.oracle.log_changes(x_t, delta, hessian_vec=hessian_vec)
 
-            norm_of_delta=np.linalg.norm(delta, ord=2)
-            if self.markov_eps and  norm_of_delta > self.markov_eps:
+            norm_of_delta = np.linalg.norm(delta, ord=2)
+            if self.markov_eps and norm_of_delta > self.markov_eps:
                 markov_counter += 1
 
             if self.cut_off_eps and norm_of_delta < self.cut_off_eps:
@@ -149,6 +151,5 @@ class GradientLeastSquares(Solver):
             # NAG: Nesterov accelerated gradient
             v_t = self.momentum * v_t + self.lr * delta
             x_t = x_t_original - v_t
-            # self.oracle.update_sample(x_t, )
 
         return x_t
