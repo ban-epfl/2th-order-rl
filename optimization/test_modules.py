@@ -83,8 +83,8 @@ class OneDimQuad(ObjectiveFunction):
     def gradient(self, x, z):
         return np.expand_dims(2 * z[:, 0] * x + z[:, 1], axis=1)
 
-    # def hessian_vector(self, x_t, v, z, r):
-    #     return np.matmul(np.expand_dims(2 * z[:, 0], axis=1), np.expand_dims(v, axis=1))
+    def hessian_vector(self, x_t, v, z, r):
+        return np.matmul(np.expand_dims(2 * z[:, 0], axis=1), np.expand_dims(v, axis=1))
 
     def get_samples(self,
                     n1: int,

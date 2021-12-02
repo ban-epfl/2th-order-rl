@@ -16,6 +16,7 @@ from optimization.oracles.NormalNoiseOracle import NormalNoiseOracle
 from optimization.oracles.MeanOracle import MeanOracle
 from optimization.oracles.StormOracle import StormOracle
 from optimization.solvers.GradientLeastSquares import GradientLeastSquares
+from optimization.solvers.SolverSGDHess1 import SolverSGDHess1
 from optimization.test_modules import WLooking, OneDimQuad, ThreeDimQuad, FourDimQuad
 from optimization.solvers.SolverSGD import SolverSGD
 from optimization.solvers.SolverStorm import SolverStorm
@@ -24,14 +25,10 @@ from optimization.solvers.SubProblemCubicNewton import SubProblemCubicNewton
 
 plot_names = []
 file_name = "0"
-save_path = "plots/test-29/limited number story/"
+save_path = "plots/test01dec/"
 
 
 def plot_objective_value(objective_values, plot_name):
-    if not cumulative:
-        axis[0].clf()
-    else:
-        plot_names.append(plot_name)
 
     axis[0].plot(range(len(objective_values)),
                  objective_values)
@@ -44,7 +41,7 @@ def plot_objective_value(objective_values, plot_name):
     axis[0].set_xlim([low_bound_x, high_bound_x])
     if not cumulative:
         axis[0].legend([plot_name], loc='upper right')
-        axis[0].savefig("plots/" + plot_name)
+        axis[0].figure.savefig("plots/" + plot_name)
     np.savetxt(save_path + "data/" + plot_name + "_obj_" + file_name + ".csv", objective_values, delimiter=",")
     objective_values = np.array(objective_values)
     objective_values = objective_values[1:] - objective_values[:-1]
@@ -60,14 +57,10 @@ def plot_objective_value(objective_values, plot_name):
     axis[1].set_xlim([low_bound_x, high_bound_x])
     if not cumulative:
         axis[1].legend([plot_name], loc='upper right')
-        axis[1].savefig("plots/" + plot_name)
+        axis[1].figure.savefig("plots/" + plot_name)
 
 
 def plot_log(values, y_label, plot_name, axis, var=False):
-    if not cumulative:
-        axis.clf()
-    else:
-        plot_names.append(plot_name)
 
     axis.plot(range(len(values)),
               values)
@@ -80,7 +73,7 @@ def plot_log(values, y_label, plot_name, axis, var=False):
 
     if not cumulative:
         axis.legend([plot_name, ], loc='upper right')
-        axis.savefig("plots/" + plot_name)
+        axis.figure.savefig("plots/" + plot_name)
     np.savetxt(save_path + "data/" + plot_name + "_" + y_label + "_" + file_name + ".csv", values, delimiter=",")
 
 
@@ -219,6 +212,19 @@ def test_10():
     print("best parameters", thetas, '\n')
 
 
+
+def test_11():
+    print("running test 11...")
+    oracle = MeanOracle(objective_function=OneDimQuad(), )
+    ms = SolverSGDHess1(oracle=oracle, max_iter=1000, n1=1, n2=1, lr=0.01, G=100, momentum=0.9)
+    thetas = ms.run(np.random.RandomState(seed=45).rand(1))
+    plot_objective_value(oracle.objective_values, "SGDHess")
+    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "SGDHess", axis[2])
+    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "SGDHess", axis[3])
+
+    print("best parameters", thetas, '\n')
+
+
 cumulative = True
 fig, axis = plt.subplots(4)
 var_labels = []
@@ -255,11 +261,13 @@ test_07()
 # test_08()
 # test_09()
 # test_10()
+test_11()
 
 if cumulative:
     fig.set_size_inches(12, 15)
     axis[3].legend(var_labels, loc='upper right')
     fig.suptitle("without_beta/alpha=1/pnt_limit={}/mom={:.2f}/lr={:.4f}/lpchz={}".format(pnt_limit, momentum, lr,lipschitz),
                  ha='right')
-    fig.legend(['1DimQuad_SGD', '1DimQuad_Storm', '1DimQuad_GradientLeastSquare'], loc='upper right')
+    fig.legend(['1DimQuad_SGD', '1DimQuad_Storm', '1DimQuad_GradientLeastSquare', '1DimQuad_SGDHess'], loc='upper right')
     plt.savefig(save_path + file_name, )
+
