@@ -70,7 +70,7 @@ class StochasticOracle(ABC):
         if self.n1 is None or self.n2 is None:
             raise ValueError('Please set oracle sample size n1 and n2!')
 
-        self.s1, self.s2 = self.objective_function.get_samples(self.n1, self.n2)
+        # self.s1, self.s2 = self.objective_function.get_samples(self.n1, self.n2)
         # tem_s1, _ = self.objective_function.get_log_samples(50, 0)
         # if self.lastObjective_value is None:
         #     self.objective_values += [self.objective_function.forward(x_t, tem_s1).mean(axis=0)] * (self.n1 + self.n2)

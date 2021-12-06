@@ -6,6 +6,7 @@ from optimization.utils.ObjectiveFunction import ObjectiveFunction
 class WLooking(ObjectiveFunction):
 
     def __init__(self):
+        super().__init__()
         self.L = 5
         self.e = 0.01
 
@@ -72,6 +73,19 @@ class WLooking(ObjectiveFunction):
         return np.matmul(hessian, v.reshape(2, 1)).squeeze()
 
 
+    def get_samples(self,
+                    n1: int,
+                    n2: int) :
+
+        return np.empty((n1, self.get_sample_dim())), np.empty((n2, self.get_sample_dim()))
+
+    def get_log_samples(self,
+                        n1: int,
+                        n2: int):
+
+        return np.empty((n1, self.get_sample_dim())), np.empty((n2, self.get_sample_dim()))
+
+
 class OneDimQuad(ObjectiveFunction):
 
     def get_sample_dim(self) -> int:
@@ -89,7 +103,6 @@ class OneDimQuad(ObjectiveFunction):
     def get_samples(self,
                     n1: int,
                     n2: int):
-
         s1 = np.random.normal(1, 0.1, (n1, self.get_sample_dim()))
         s2 = np.random.normal(1, 0.1, (n2, self.get_sample_dim()))
         return s1, s2
@@ -97,19 +110,18 @@ class OneDimQuad(ObjectiveFunction):
     def get_log_samples(self,
                         n1: int,
                         n2: int):
-
         self.log_s1 = np.random.RandomState(seed=56).normal(1, 2, (n1, self.get_sample_dim()))
         self.log_s2 = np.random.RandomState(seed=56).normal(1, 2, (n2, self.get_sample_dim()))
         return self.log_s1, self.log_s2
 
     def true_gradient(self, x):
-        return  2*x[0] + 1
+        return 2 * x[0] + 1
 
     def true_value(self, x):
-        return  x[0]**2+x[0] + 1
+        return x[0] ** 2 + x[0] + 1
 
-    def true_hessian_vector(self, x_t,):
-        return np.array([2]*x_t.shape[0])
+    def true_hessian_vector(self, x_t, ):
+        return np.array([2] * x_t.shape[0])
 
 
 class ThreeDimQuad(ObjectiveFunction):
@@ -129,27 +141,25 @@ class ThreeDimQuad(ObjectiveFunction):
         return np.matmul(np.expand_dims(2 * z[:, 0], axis=1), np.expand_dims(v, axis=1))
 
 
+class HighDimQuad(ObjectiveFunction):
 
-
-class FourDimQuad(ObjectiveFunction):
-
-    def __init__(self):
-        self.dim=4
+    def __init__(self, dim):
+        self.dim = dim
         super().__init__()
 
     def get_sample_dim(self) -> int:
-        return self.dim*3
+        return self.dim * 3
 
     def forward(self, x, z):
-        result=np.zeros(z.shape[0])
+        result = np.zeros(z.shape[0])
         for i in range(self.dim):
-            result += z[:, i] * x[i] ** 2 + z[:, i+1] * x[i] + z[:, i+2]
+            result += z[:, i] * x[i] ** 2 + z[:, i + 1] * x[i] + z[:, i + 2]
         return result
 
     def gradient(self, x, z):
         result = np.expand_dims(2 * z[:, 0] * x[0] + z[:, 1], axis=1)
         for i in range(1, self.dim):
-            result = np.c_[result, np.expand_dims(2 * z[:, i] * x[i] + z[:, i+1], axis=1)]
+            result = np.c_[result, np.expand_dims(2 * z[:, i] * x[i] + z[:, i + 1], axis=1)]
         return result
 
     # def hessian_vector(self, x_t, v, z, r):
@@ -172,10 +182,10 @@ class FourDimQuad(ObjectiveFunction):
         return self.log_s1, self.log_s2
 
     def true_gradient(self, x):
-        return  np.array([2*x[i] + 1 for i in range(self.dim)])
+        return np.array([(2 * x[i] + 1) for i in range(self.dim)])
 
     def true_value(self, x):
-        return  sum([x[i]**2+x[i] + 1 for i in range(self.dim)])
+        return sum([(x[i] ** 2 + x[i] + 1) for i in range(self.dim)])
 
-    def true_hessian_vector(self, x,):
-        return np.array([2]*x.shape[0])
+    def true_hessian_vector(self, x, ):
+        return np.array([2] * x.shape[0])

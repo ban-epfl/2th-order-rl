@@ -17,15 +17,15 @@ from optimization.oracles.MeanOracle import MeanOracle
 from optimization.oracles.StormOracle import StormOracle
 from optimization.solvers.GradientLeastSquares import GradientLeastSquares
 from optimization.solvers.SolverSGDHess1 import SolverSGDHess1
-from optimization.test_modules import WLooking, OneDimQuad, ThreeDimQuad, FourDimQuad
+from optimization.test_modules import WLooking, OneDimQuad, ThreeDimQuad, HighDimQuad
 from optimization.solvers.SolverSGD import SolverSGD
 from optimization.solvers.SolverStorm import SolverStorm
 from optimization.solvers.SolverCubicNewtonMiniBatch import SolverCubicNewtonMiniBatch
 from optimization.solvers.SubProblemCubicNewton import SubProblemCubicNewton
 
 plot_names = []
-file_name = "0"
-save_path = "plots/test01dec/"
+file_name = "-1"
+save_path = "plots/"
 
 
 def plot_objective_value(objective_values, plot_name):
@@ -171,21 +171,21 @@ def test_07():
 
 def test_08():
     print("running test 8...")
-    oracle = MeanOracle(objective_function=FourDimQuad(), )
+    oracle = MeanOracle(objective_function=HighDimQuad(quad_dim), )
     ms = SolverSGD(oracle=oracle, max_iter=1000, n1=1, lr=0.01)
-    thetas = ms.run(np.random.RandomState(seed=45).rand(4))
+    thetas = ms.run(np.random.RandomState(seed=45).rand(quad_dim))
     plot_objective_value(oracle.objective_values, "OneDimQuad_SolverSGD")
-    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "normOfGradOneDimQuad_SolverSGD", axis[2])
-    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "normOfDiffOneDimQuad_SolverSGD", axis[3])
+    plot_log(oracle.norm_of_gradients, "log of norm (grad)", "SGD", axis[2])
+    plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "SGD", axis[3])
 
     print("best parameters", thetas, '\n')
 
 
 def test_09():
     print("running test 9...")
-    oracle = StormOracle(objective_function=FourDimQuad(), k=0.1, c_factor=300, )
+    oracle = StormOracle(objective_function=HighDimQuad(quad_dim), k=0.7, c_factor=1, )
     ms = SolverStorm(oracle=oracle, max_iter=1000, )
-    thetas = ms.run(np.random.RandomState(seed=45).rand(4))
+    thetas = ms.run(np.random.RandomState(seed=45).rand(quad_dim))
     plot_objective_value(oracle.objective_values, "Storm")
     plot_log(oracle.norm_of_gradients, "log of norm (grad)", "Storm", axis[2])
     plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "Storm", axis[3])
@@ -196,16 +196,17 @@ def test_09():
 def test_10():
     print("running test 10...")
 
-    oracle = LeastSquareOracle(objective_function=FourDimQuad(), )
-    ms = GradientLeastSquares(oracle=oracle, j1=1, j2=1, l=5, alpha=0.99, max_iter=1000, lr=0.01,
-                              point_limit=20, use_beta=True, momentum=0.7, markov_eps=2, cut_off_eps=1e-3)
-    thetas = ms.run(np.random.RandomState(seed=45).rand(4))
+    oracle = LeastSquareOracle(objective_function=HighDimQuad(quad_dim), )
+    ms = GradientLeastSquares(oracle=oracle, j2=1, l=lipschitz, alpha=alpha, max_iter=1000, lr=lr,
+                              point_limit=pnt_limit, use_beta=False, momentum=momentum, markov_eps=None, cut_off_eps=None)
+    thetas, inactives = ms.run(np.random.RandomState(seed=45).rand(quad_dim))
 
     # plot the objective value list
     plot_objective_value(oracle.objective_values, "GradientLeastSquares")
     plot_log(oracle.norm_of_gradients, "log of norm (grad)", "GradientLeastSquares", axis[2])
     plot_log(oracle.norm_of_grad_diff, "norm of diff (grads)", "GradientLeastSquares", axis[3])
-    plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "GradientLeastSquares", axis[4])
+    plot_log(inactives, "inactives", "GradientLeastSquares", axis[4])
+    # plot_log(oracle.norm_of_beta_diff, "norm of diff (beta)", "GradientLeastSquares", axis[4])
     # plot_log(oracle.norm_of_hessian_vec_diff, "norm of diff (Hv)", "normOfDiffOneDimQuad_GradientLeastSquares_j1",
     # axis[4])
 
@@ -226,48 +227,54 @@ def test_11():
 
 
 cumulative = True
-fig, axis = plt.subplots(4)
+fig, axis = plt.subplots(5)
 var_labels = []
 high_bound_x = 1000
 low_bound_x = -1
 high_bound_y = 3
-
-
-
-y_bounds = {"obj value": [0.5, 3],
-            "log of rate (obj value)": [-7, 7],
-            "norm of diff (grads)": [0, 1],
-            "log of norm (grad)": [-10, 2],
-            "norm of diff (beta)": [0, 3.1],
-            "norm of diff (Hv)": [0, 6]
-            }
 low_bound_y = 0
 
 
 
 
 pnt_limit = 100
-momentum = 0.2
-lr = 0.01
-lipschitz=2
+momentum = 0.9
+lr = 0.001
+lipschitz = 4
+quad_dim = 10
+alpha = 0.9999999999999999
 
+
+y_bounds = {"obj value": [.5*quad_dim, 2.5*quad_dim],
+            "log of rate (obj value)": [-7, 7],
+            "norm of diff (grads)": [0, 10],
+            "log of norm (grad)": [-8, 10],
+            "norm of diff (beta)": [0, 3.1],
+            "norm of diff (Hv)": [0, 6],
+            "inactives": [0, pnt_limit]
+            }
 
 # test_01()
-test_03()
-test_04()
-# test_05()
+# test_03()
+# test_04()
+test_05()
 # test_06()
-test_07()
+# test_07()
 # test_08()
 # test_09()
 # test_10()
-test_11()
+# test_11()
 
 if cumulative:
     fig.set_size_inches(12, 15)
     axis[3].legend(var_labels, loc='upper right')
-    fig.suptitle("without_beta/alpha=1/pnt_limit={}/mom={:.2f}/lr={:.4f}/lpchz={}".format(pnt_limit, momentum, lr,lipschitz),
+    fig.suptitle("without_beta/pnt_limit={}/mom={:.2f}/lr={:.4f}/\n lpchz={}/ quad_dim={}\n alpha={}".format(pnt_limit,
+                                                                                                       momentum,
+                                                                                                       lr,
+                                                                                                       lipschitz,
+                                                                                                       quad_dim,
+                                                                                                        alpha),
                  ha='right')
-    fig.legend(['1DimQuad_SGD', '1DimQuad_Storm', '1DimQuad_GradientLeastSquare', '1DimQuad_SGDHess'], loc='upper right')
+    fig.legend(['Quad_SGD', 'Quad_Storm', 'Quad_GradientLeastSquare', ], loc='upper right')
     plt.savefig(save_path + file_name, )
 

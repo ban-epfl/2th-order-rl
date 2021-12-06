@@ -10,8 +10,7 @@
 # this class are the past iterates of the master problem, the convex combination 
 # parameter, the number of samples and other precision parameters.
 #
-
-
+import quadprog
 import numpy as np
 
 from optimization.oracles.LeastSquareOracle import LeastSquareOracle
@@ -60,7 +59,7 @@ class GradientLeastSquares(Solver):
          a matrix with the shape of (self.j1, x_t.shape[0]) OR (self.j1, param_num)
 
         """
-        return x_t + np.random.normal(0, 0.01, (self.j1, x_t.shape[0]))
+        return x_t + np.random.normal(0, 0.01, (100, x_t.shape[0]))
 
     def estimate_hessian_vector(self, x_js, x_t, v):
         """
@@ -82,9 +81,11 @@ class GradientLeastSquares(Solver):
 
     def run(self, x_t, **kwargs):
         print("GradientLeastSquares optimizing... ")
-        self.x_js.append(x_t + np.random.normal(0, 0.0001, x_t.shape))
+        self.oracle.update_sample(x_t, save=False)
+        _, g_t_initial, _, _ = self.oracle.compute_oracle(x_t, )
+        self.x_js.append(x_t - self.lr*g_t_initial)
         self.oracle.update_sample(x_t, )
-
+        inactives_l=[]
         markov_counter = 0
         # initiate nestrov momentum velocity
         v_t = np.zeros(x_t.shape)
@@ -98,35 +99,11 @@ class GradientLeastSquares(Solver):
             # if last points are going to increase the limit, cut them out
             if x_js.shape[0] > self.point_limit:
                 x_js = x_js[x_js.shape[0] - self.point_limit:]
-            b = 0
-            x_js_minus = x_js - x_t
-            # in case of estimating beta, so we need to increase the dim if x_js
-            if self.use_beta: x_js_minus = np.c_[np.ones(x_js.shape[0]), x_js_minus]
-            A = self.alpha / x_js.shape[0] * np.matmul(x_js_minus.T, x_js_minus) + (1 - self.alpha) * np.identity(
-                x_t.shape[0] + (1 if self.use_beta else 0))
-            # compute lipschitz part of the right hand side of the equation Ad=c
-            for j in range(x_js.shape[0]):
-                objective_value_x_j, _, _, _ = self.oracle.compute_index_oracle(x_js[j], j)
-                objective_value_x_t, _, _, _ = self.oracle.compute_index_oracle(x_t, j)
-                if self.use_beta: objective_value_x_t = 0
-                b += (self.alpha / x_js.shape[0]) * (
-                        objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,
-                                                                                                ord=2) ** 2) * \
-                     x_js_minus[j]
-
-            # compute mean of gradient estimate of the right hand side of the equation Ad=c
-            gradient_sum = np.zeros(x_t.shape)
-            for j in range(self.j2):
-                self.oracle.update_sample(x_t, )
-                objective_value_x_t, g_t, _, _ = self.oracle.compute_oracle(x_t, )
-                gradient_sum += g_t
-
-            # in case of estimating beta, so we need to increase the dim if gradient_sum
-            if self.use_beta:
-                gradient_sum = np.concatenate([[0], gradient_sum])
-            b += (1 - self.alpha) / self.j2 * gradient_sum
             # solve least square problem
-            delta = np.linalg.lstsq(A, b, rcond=None)[0]
+            # delta = self.find_least_square(x_js, x_t,)
+            # solve qd problem
+            delta, inactives = self.solve_qp(x_js, x_t, )
+            inactives_l.append(inactives)
             # estimate hessian vector
             hessian_vec = None
             # hessian_vec = self.estimate_hessian_vector(x_js,
@@ -148,8 +125,91 @@ class GradientLeastSquares(Solver):
                                                   markov_prob=markov_counter / (i + 1))
                 break
 
+            self.oracle.update_sample(x_t, )
             # NAG: Nesterov accelerated gradient
             v_t = self.momentum * v_t + self.lr * delta
             x_t = x_t_original - v_t
 
-        return x_t
+        return x_t, inactives_l
+
+    def solve_qp(self, x_js, x_t, ):
+        x_js_minus = x_js - x_t
+        # in case of estimating beta, so we need to increase the dim if x_js
+        if self.use_beta: x_js_minus = np.c_[np.ones(x_js.shape[0]), x_js_minus]
+        G_matrix = np.identity(x_js.shape[0] + (1 if self.use_beta else 0) + x_t.shape[0])
+        for i in range(G_matrix.shape[0]):
+            if i < x_js.shape[0]:
+                G_matrix[i][i] *= self.alpha / x_js.shape[0]
+            else:
+                G_matrix[i][i] *= (1.0 - self.alpha) / self.j2
+
+        G = 2 * G_matrix
+        C = np.zeros((2 * x_js.shape[0], G.shape[0]))
+        h = np.zeros((2 * x_js.shape[0],))
+        a = np.zeros(G.shape[0])
+        # compute mean of gradient estimate of the right hand side of the equation Ad=c
+        gradient_sum = np.zeros(x_t.shape)
+        for j in range(self.j2):
+            self.oracle.update_sample(x_t, save=False)
+            objective_value_x_t, g_t, _, _ = self.oracle.compute_oracle(x_t, )
+            gradient_sum += g_t
+        # in case of estimating beta, so we need to increase the dim if gradient_sum
+        if self.use_beta:
+            gradient_sum = np.concatenate([[0], gradient_sum])
+        a[-gradient_sum.shape[0]:] = -2 * (1.0 - self.alpha) / self.j2 * gradient_sum
+        # build constraints
+        j = 0
+        for i in range(C.shape[0]):
+            objective_value_x_j, _, _, _ = self.oracle.compute_index_oracle(x_js[j], j)
+            objective_value_x_t, _, _, _ = self.oracle.compute_index_oracle(x_t, j)
+            if self.use_beta: objective_value_x_t = 0
+            if i % 2 == 0:
+                C[i][j] = -1
+                C[i][-x_js_minus[j].shape[0]:] = -x_js_minus[j]
+                h[i] = self.l / 2 * np.linalg.norm(x_js[j] - x_t, ord=2) ** 2 - (
+                            objective_value_x_j - objective_value_x_t)
+            else:
+                C[i][j] = 1
+                C[i][-x_js_minus[j].shape[0]:] = x_js_minus[j]
+                h[i] = self.l / 2 * np.linalg.norm(x_js[j] - x_t, ord=2) ** 2 + (
+                            objective_value_x_j - objective_value_x_t)
+                j += 1
+
+        # sol=solvers.qp(Q, None, G, h, None, None)
+        sol = quadprog.solve_qp(G, -a, -C.T, -h, 0)
+        # print("********************************")
+        # # print(sol[0][:x_js.shape[0]])
+        # print(sum(sol[0][:x_js.shape[0]]==0))
+        return sol[0][x_js.shape[0]:], sum(sol[0][:x_js.shape[0]]==0)
+
+    def find_least_square(self, x_js, x_t, ):
+        x_js_minus = x_js - x_t
+        b = 0
+        # in case of estimating beta, so we need to increase the dim if x_js
+        if self.use_beta: x_js_minus = np.c_[np.ones(x_js.shape[0]), x_js_minus]
+        A = self.alpha / x_js.shape[0] * np.matmul(x_js_minus.T, x_js_minus) + (1.0 - self.alpha) * np.identity(
+            x_t.shape[0] + (1 if self.use_beta else 0))
+        # compute lipschitz part of the right hand side of the equation Ad=c
+        for j in range(x_js.shape[0]):
+            # self.oracle.update_sample(x_t)
+            objective_value_x_j, _, _, _ = self.oracle.compute_index_oracle(x_js[j], j)
+            objective_value_x_t, _, _, _ = self.oracle.compute_index_oracle(x_t, j)
+            if self.use_beta: objective_value_x_t = 0
+            b += (self.alpha / x_js.shape[0]) * (
+                    objective_value_x_j - objective_value_x_t - self.l / 2 * np.linalg.norm(x_js[j] - x_t,
+                                                                                            ord=2) ** 2) * \
+                 x_js_minus[j]
+
+        # compute mean of gradient estimate of the right hand side of the equation Ad=c
+        gradient_sum = np.zeros(x_t.shape)
+        for j in range(self.j2):
+            self.oracle.update_sample(x_t, )
+            objective_value_x_t, g_t, _, _ = self.oracle.compute_oracle(x_t, )
+            gradient_sum += g_t
+
+        # in case of estimating beta, so we need to increase the dim if gradient_sum
+        if self.use_beta:
+            gradient_sum = np.concatenate([[0], gradient_sum])
+        b += (1.0 - self.alpha) / self.j2 * gradient_sum
+
+        return np.linalg.lstsq(A / x_t.shape[0], b / x_t.shape[0], rcond=None)[0]
